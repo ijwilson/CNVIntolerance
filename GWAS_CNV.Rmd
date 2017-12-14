@@ -1,0 +1,27 @@
+---
+title: "GWAS and CNVs"
+author: "Ian Wilson"
+date: "14 December 2017"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(here)
+```
+
+## The GWAS database
+
+```{r download_file, echo=FALSE}
+if (!file.exists(here("figs","GWAS_latest.png"))) {
+  if (!dir.exists(here("figs"))) dir.create("figs")
+download.file("ftp://ftp.ebi.ac.uk/pub/databases/gwas/timeseries/png/gwas-diagram_2017-Q3.png"
+              , here("figs","GWAS_latest.png"))
+}
+```
+![GWAS](http://ftp.ebi.ac.uk/pub/databases/gwas/timeseries/png/gwas-diagram_2017-Q3.png)
+
+
+
