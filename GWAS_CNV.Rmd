@@ -21,7 +21,7 @@ download.file("ftp://ftp.ebi.ac.uk/pub/databases/gwas/timeseries/png/gwas-diagra
               , here("figs","GWAS_latest.png"))
 }
 ```
-![GWAS](http://ftp.ebi.ac.uk/pub/databases/gwas/timeseries/png/gwas-diagram_2017-Q3.png)
+![GWAS Q3 2017](http://ftp.ebi.ac.uk/pub/databases/gwas/timeseries/png/gwas-diagram_2017-Q3.png)
 
 
 
