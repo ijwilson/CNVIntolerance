@@ -50,6 +50,9 @@ manhattan(height, main="Waist-Hip Ratio")
 par(opar)
 ```
 
+These don't look great.
+
+
 ```{r quantile_plots, cache=TRUE}
 opar <- par(mfrow=c(2,2), mar=c(3,3,2,1))
 qq(height$`Pvalue BMI`, main="BMI")
@@ -58,3 +61,5 @@ qq(height$`Pvalue Height`, main="Height")
 qq(height$`Pvalue Waist-Hip ratio`, main="Waist Hip Ratio")
 par(opar)
 ```
+
+These markers should be a good place to start in looking for associations between CNV variants and the SNP directory.

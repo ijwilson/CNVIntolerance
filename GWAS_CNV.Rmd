@@ -10,6 +10,7 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(here)
+source(here("R","prepare.R"))
 ```
 
 ## The GWAS database
@@ -25,5 +26,28 @@ download.file("ftp://ftp.ebi.ac.uk/pub/databases/gwas/timeseries/png/gwas-diagra
 ![GWAS Q3 2017](http://ftp.ebi.ac.uk/pub/databases/gwas/timeseries/png/gwas-diagram_2017-Q3.png)
 
 We can download the GWAS database from EBI.  It currently looks like the above.
+
+```{r readGWASdatabase}
+gwas <- read.csv(dropbox("gwas_catalog_v1.0.1-associations_e90_r2017-12-04.tsv"), sep="\t")
+```
+
+We have results from `r length(unique(gwas$MAPPED_TRAIT))` traits.
+
+Consider height, weight, BMI and waist-hip ratio.
+
+
+```{r traits}
+traits <- unique(gwas$MAPPED_TRAIT)
+height_traits <- traits[ grep("height", traits)]
+bmi_traits <- grep("BMI", traits)
+bmi_trait2 <- traits[ grep("body mass index", traits)]
+```
+
+
+```{r justheight}
+gwas_height <- gwas[gwas$MAPPED_TRAIT=="body height", ]
+```
+
+We have `r nrow(gwas_height)` hits.
 
 
