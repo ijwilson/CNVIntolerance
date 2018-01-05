@@ -4,6 +4,8 @@ source(here("R","prepare.R"))
 install.load("data.table")
 
 height <- fread(dropbox("height_CNV_association_41467_2017_556_MOESM2_ESM.csv"))
+
+
 colnames(height)[5] <- "pvalue_BMI" 
 
 ## Simple of Manhattan plot of BMI

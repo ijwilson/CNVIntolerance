@@ -14,6 +14,7 @@ library(here)
 
 ## The GWAS database
 
+
 ```{r download_file, echo=FALSE}
 if (!file.exists(here("figs","GWAS_latest.png"))) {
   if (!dir.exists(here("figs"))) dir.create("figs")
@@ -23,5 +24,6 @@ download.file("ftp://ftp.ebi.ac.uk/pub/databases/gwas/timeseries/png/gwas-diagra
 ```
 ![GWAS Q3 2017](http://ftp.ebi.ac.uk/pub/databases/gwas/timeseries/png/gwas-diagram_2017-Q3.png)
 
+We can download the GWAS database from EBI.  It currently looks like the above.
 
 
