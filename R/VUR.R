@@ -9,6 +9,8 @@ install.load.bioc("GenomicRanges", "GenomicAlignments")
 del <- fread(dropbox("VUR/DEL_results.txt"))
 dup <- fread(dropbox("VUR/DUP_results.txt"))
 
+## There seem to be far too many of these
+
 del_filter <- del[left_match>60 & right_match > 60]
 
 conv <- function(xx) {
