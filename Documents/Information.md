@@ -37,17 +37,31 @@ ExAc: <http://exac.broadinstitute.org/>
 
 *    Human genetic variation, both structural and at single sites.*
 
+WTCCC1
+
+data
+
+<https://www.ebi.ac.uk/ega/studies/EGAS00000000017>
+
 dbVar: <https://www.ncbi.nlm.nih.gov/dbvar>
 
 * A database of human structural genetic variation*
+
+Psychiatric genetics consortium
+
+Data are available to download from a few studies including SCZ.
+
+https://www.med.unc.edu/pgc/results-and-downloads
 
 ## Reading
 
 **Recent CNV Associations**
 
-**Height**  https://www.nature.com/articles/s41467-017-00556-x 
+**Height** <https://www.nature.com/articles/s41467-017-00556-x>
 
 **Schizophrenia.** <https://www.nature.com/articles/ng.3725.pdf>
+
+and a new unpublished preprint <https://www.biorxiv.org/content/early/2016/08/09/068593.full.pdf+html>
 
 And a GWAS https://www.biorxiv.org/content/early/2016/08/09/068593
 
@@ -58,6 +72,19 @@ And a GWAS https://www.biorxiv.org/content/early/2016/08/09/068593
 Catalog).](https://academic.oup.com/nar/article/45/D1/D896/2605751/The-new-NHGRI-EBI-Catalog-of-published-genome-wide)
 
 Nucleic Acids Research, 2017, Vol. 45 (Database issue): D896-D901.
+
+**GWAS Central** [link](http://www.gwascentral.org/)
+
+**GRASP**
+
+[GRASP link](https://grasp.nhlbi.nih.gov/Search.aspx)
+
+GRASP allows you to get records of all SNPs under a particular p-value for any trait of interest for a variety of studies that have been housed at the NCBI.  These can then be loaded into R to be compared with whatever other data you have
+
+**CNV association database**
+
+Just for panic disorder, for Japanese individuals.  (link)[https://gwas.biosciencedbc.jp/cgi-bin/cccdb/ccc_top.cgi]
+
 
 ExAc: https://www.nature.com/articles/nature19057
 

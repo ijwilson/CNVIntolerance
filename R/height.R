@@ -2,8 +2,17 @@
 library(here)
 source(here("R","prepare.R"))
 install.load("data.table")
+install.load.bioc("GenomicRanges")
 
 height <- fread(dropbox("height_CNV_association_41467_2017_556_MOESM2_ESM.csv"))
+
+gheight <- GRanges(seqnames=height$CHR, IRanges(start=height$BP, end=height$BP+1)
+                   , fdel = height$F_DEL, fdup=height$F_DUP, pheight=height$`Pvalue Height` )
+
+
+if (!dir.exists(here("output")))
+  dir.create(here("output"))
+save(gheight, file=here("output", "height_cnv.rda"))
 
 
 colnames(height)[5] <- "pvalue_BMI" 

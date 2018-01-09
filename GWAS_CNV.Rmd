@@ -51,3 +51,11 @@ gwas_height <- gwas[gwas$MAPPED_TRAIT=="body height", ]
 We have `r nrow(gwas_height)` hits.
 
 
+If we now look at the height CNVs 
+
+```{r}
+height <- fread(dropbox("height_CNV_association_41467_2017_556_MOESM2_ESM.csv"))
+gheight <- 
+```
+
+
