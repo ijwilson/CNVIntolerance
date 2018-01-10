@@ -19,7 +19,7 @@ m <- match(genes.df$group_name, names(xx))
 genes.df <- cbind(genes.df[!is.na(m),], name = unlist(xx[m]))
 genesGR <- GRanges(seqnames=substring(genes.df$seqnames,4),ranges = IRanges(genes.df$start,genes.df$end, names=genes.df$name), strand=genes.df$strand)
 
-seqlevels(genesGR) <- paste("chr", seqlevels(genesGR), sep="")
+#seqlevels(genesGR) <- paste("chr", seqlevels(genesGR), sep="")
 
 if (!dir.exists(here("output"))) 
   dir.create("output")
