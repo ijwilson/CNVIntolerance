@@ -9,10 +9,10 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(here)
 source(here("R","prepare.R"))
-install.load(c("data.table","qqman"))
+install.load(c("data.table", "qqman"))
 ```
 
-We have downloaded a file with the CNV association results with height from the paper by ...
+We have downloaded a file with the CNV association results with height from the paper by  Mace *et al.*.   [CNV-association meta-analysis in 191,161 European adults reveals new loci associated with anthropometric traits](https://www.nature.com/articles/s41467-017-00556-x#MOESM2).
 
 ## Height
 
