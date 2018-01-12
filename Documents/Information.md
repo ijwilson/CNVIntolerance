@@ -126,6 +126,11 @@ http://www.reprogen.org/data_download.html
 http://www.chargeconsortium.com/main/results
 
 
+#### Educational attainment, Neuroticism (Edinburgh) & Social Deprivation
+
+http://www.ccace.ed.ac.uk/node/335
+
+[Latest paper on neuroticism](https://www.nature.com/articles/s41588-017-0013-8)
 
 ## Reading
 

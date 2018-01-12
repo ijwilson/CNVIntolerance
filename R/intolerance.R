@@ -5,19 +5,23 @@
 library(here)
 source(here("R","prepare.R"))
 ### SNP intolerance scores
+if (!dir.exists(here("data")))
+  dir.create(here("data"))
+if (!dir.exists(here("data/Intolerance")))
+  dir.create(here("data/Intolerance"))
 if (FALSE) {
   download.file("ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3.1/functional_gene_constraint/fordist_cleaned_nonpsych_z_pli_rec_null_data.txt",
-                dropbox("Intolerance/fordist_cleaned_nonpsych_z_pli_rec_null_data.txt"))
+                here("data","Intolerance", "fordist_cleaned_nonpsych_z_pli_rec_null_data.txt"))
   download.file("ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3.1/functional_gene_constraint/fordist_cleaned_exac_r03_march16_z_pli_rec_null_data.txt",
-                dropbox("Intolerance/fordist_cleaned_exac_r03_march16_z_pli_rec_null_data.txt"))  
+                here("data","Intolerance", "fordist_cleaned_exac_r03_march16_z_pli_rec_null_data.txt"))  
   download.file("ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3.1/functional_gene_constraint/fordist_cleaned_exac_nonTCGA_z_pli_rec_null_data.txt",
-                dropbox("Intolerance/fordist_cleaned_exac_nonTCGA_z_pli_rec_null_data.txt"))
+                here("data","Intolerance", "fordist_cleaned_exac_nonTCGA_z_pli_rec_null_data.txt"))
   download.file("ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3.1/functional_gene_constraint/README_fordist_cleaned_exac_r03_z_data_pLI_2016_01_13.txt",
-                dropbox("Intolerance/README_fordist_cleaned_exac_r03_z_data_pLI_2016_01_13.txt")) 
+                here("data","Intolerance", "README_fordist_cleaned_exac_r03_z_data_pLI_2016_01_13.txt")) 
   download.file("ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3.1/functional_gene_constraint/README_fordist_cleaned_nonTCGA_z_data_pLI_2016_01_13.txt",
-              dropbox("Intolerance/README_fordist_cleaned_nonTCGA_z_data_pLI_2016_01_13.txt"))
+              here("data","Intolerance", "README_fordist_cleaned_nonTCGA_z_data_pLI_2016_01_13.txt"))
   download.file("ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3.1/functional_gene_constraint/README_fordist_cleaned_nonpsych_z_data_pLI_2016_01_13.txt",
-                dropbox("Intolerance/README_fordist_cleaned_nonpsych_z_data_pLI_2016_01_13.txt"))        
+                here("data","Intolerance", "README_fordist_cleaned_nonpsych_z_data_pLI_2016_01_13.txt"))        
 }
 a1 <- read.table(dropbox("Intolerance/fordist_cleaned_exac_nonTCGA_z_pli_rec_null_data.txt"), header=TRUE)
 a2 <- read.table(dropbox("Intolerance/fordist_cleaned_exac_r03_march16_z_pli_rec_null_data.txt"), header=TRUE)
@@ -51,12 +55,19 @@ a3 <- read.table(dropbox("Intolerance/fordist_cleaned_nonpsych_z_pli_rec_null_da
 ## CNV Intolerance Scores
 if (FALSE) {
   download.file("ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3.1/cnv/exac-final-cnv.gene.scores071316",
-                dropbox("Intolerance/exac-final-cnv.gene.scores071316"))
+                here("data","Intolerance", "exac-final-cnv.gene.scores071316"))
   download.file("ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3.1/cnv/exac-final.autosome-1pct-sq60-qc-prot-coding.cnv.bed",
-              dropbox("Intolerance/exac-final.autosome-1pct-sq60-qc-prot-coding.cnv.bed"))  
+                here("data","Intolerance", "exac-final.autosome-1pct-sq60-qc-prot-coding.cnv.bed"))  
   download.file("ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3.1/cnv/README.cnv_bed", 
-              dropbox("Intolerance/README.cnv_bed"))
+                here("data","Intolerance", "README.cnv_bed"))
   download.file("ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3.1/cnv/README.cnv_gene_scores",
-              dropbox("Intolerance/README.cnv_gene_scores"))
+                here("data","Intolerance", "README.cnv_gene_scores"))
 }
 
+
+cnv_intolerance <- read.table(here("data", "Intolerance", "exac-final-cnv.gene.scores071316"), header=TRUE)
+
+
+install.load("ggplot2")
+
+ggplot(cnv_intolerance, aes(x=del.score, y=dup.score)) + geom_point(alpha=0.1)

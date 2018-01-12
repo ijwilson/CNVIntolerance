@@ -21,6 +21,5 @@ genesGR <- GRanges(seqnames=substring(genes.df$seqnames,4),ranges = IRanges(gene
 
 #seqlevels(genesGR) <- paste("chr", seqlevels(genesGR), sep="")
 
-if (!dir.exists(here("output"))) 
-  dir.create("output")
+if (!dir.exists(here("output"))) dir.create("output")
 save(genesGR, file="output/genesGR.rda")
