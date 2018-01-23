@@ -46,3 +46,68 @@ t.test(merged.table$del.sing.score[sig==TRUE],merged.table$del.sing.score[sig==F
 
 plot(-log10(merged.table$dev_pval), merged.table$del.sing.score)
 
+### Now we can do the same for height
+
+## read SCZ cnv results
+height_cnv <- read.csv("C:\\Users\\nijw\\Dropbox/CNVIntolerance/height_CNV_association_41467_2017_556_MOESM2_ESM.csv")
+head(height_cnv)
+
+## Need to get the genes associated with each CVN
+
+install.load.bioc("GenomicRanges")
+
+
+gheight <- GRanges(seqnames=height_cnv$CHR, IRanges(start=height_cnv$BP, end=height_cnv$BP+1)
+                   , fdel = height_cnv$F_DEL, fdup=height_cnv$F_DUP, p=height_cnv$Pvalue.Height, 
+                   beta = height_cnv$Beta.Height )
+
+## Need teh locations of some genes
+
+
+install.load("DBI","RSQLite")
+install.load.bioc("org.Hs.eg.db","TxDb.Hsapiens.UCSC.hg19.knownGene")
+
+txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+genes <-  transcriptsBy(txdb, "gene")
+genes.gr <- reduce(genes)
+genes.df <- as(genes.gr, "data.frame")
+
+x <- org.Hs.egSYMBOL
+# Get the gene symbol that are mapped to an entrez gene identifiers
+mapped_genes <- mappedkeys(x)
+xx <- as.list(x[mapped_genes])
+
+## ------------------------------------------------------------------------
+m <- match(genes.df$group_name, names(xx))
+genes.df <- cbind(genes.df[!is.na(m),], name = unlist(xx[m]))
+genesGR <- GRanges(seqnames=substring(genes.df$seqnames,4),ranges = IRanges(genes.df$start,genes.df$end, names=genes.df$name), strand=genes.df$strand)
+
+## find the gene for each of these CNVs
+co <- countOverlaps(gheight, genesGR)
+gheight2 <- gheight[co>0]
+gg <- findOverlaps(gheight2[co>0], genesGR)
+dups <- duplicated(queryHits(gg))
+gg <- gg[!dups]
+
+gheight2$gene_symbol <- names(genesGR)[subjectHits(gg)] 
+
+height_score <- tapply(gheight2$beta, gheight2$gene_symbol, mean)
+height_positive <- tapply(gheight2$beta, gheight2$gene_symbol, function(x) sum(x>0))
+height_positive <- tapply(gheight2$beta, gheight2$gene_symbol, function(x) sum(x>0))
+
+
+p_score <- tapply(gheight2$p, gheight2$gene_symbol, function(x) mean(x<0.05))
+n <- tapply(gheight2$p, gheight2$gene_symbol, length)
+
+del_change <- by(as.data.frame(gheight2)[,c(6,8,9)], gheight2$gene_symbol, function(x) sum(x[,1]*abs(x[,3])), simplify = TRUE )
+
+
+
+d <- data.frame(height_score, p_score, n, height_positive, del.change =as.vector(del_change))
+d$gene_symbol <- rownames(d)
+
+merged.height <- merge(d, exac.scores, by="gene_symbol")
+
+install.load("ggplot2")
+
+ggplot(merged.height, aes(x=del.change, y=del.score)) + geom_point()
