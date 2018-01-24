@@ -1,0 +1,67 @@
+---
+title: "Schizophrenia and Height CNV"
+output: html_notebook
+---
+
+```{r prepare, echo=FALSE, cache=TRUE}
+setwd("D:/Ian/IHG/projects/CNVIntolerance/Examples")   ## You would need to change to the directory where your file is stored
+source("helper_functions.R")
+install.load("pander", "ggplot2", "data.table")
+
+## Read the non-gene centric results.
+scz.dup <- read.table("C:\\Users\\nijw\\Dropbox/CNVIntolerance/pgc_cnv/PGC_41K_QC_dup.cnv.results", header=TRUE)
+scz.del <- read.table("C:\\Users\\nijw\\Dropbox/CNVIntolerance/pgc_cnv/PGC_41K_QC_del.cnv.results", header=TRUE)
+
+height <- fread("C:\\Users/nijw/Dropbox/CNVIntolerance/height_CNV_association_41467_2017_556_MOESM2_ESM.csv")
+height_raw <- fread("C:\\Users/nijw/Dropbox/CNVIntolerance/cnv_catalogue_CNVs_2018-01-24_03_51_11.csv")
+
+check <- cbind(height_raw$BP, height$BP, height_raw$BP -  height$BP )
+check[1:10,]
+
+h3 <- merge(height_raw, height, by=c("CHR", "BP"))
+
+
+plot(h3$F_DUP.x, h3$F_DUP.y)
+setkey(height, CHR, BP)
+setkey(height_raw, CHR, BP)
+
+h2 <- height_raw[height]
+head(scz.del)
+head(height)
+```
+
+We have read `r nrow(scz.del)` rows of deletions and `r nrow(scz.dup)` rows of duplications for schizophrenia and `r nrow(height)` for the height study.
+
+
+
+The schizophrenia data are based on  cohort of 21,094 cases and 20,227 controls, giving a total sample 
+size of 41,321. These were *A final set of rare, highquality CNVs was defined as those >20 kb in length, encompassing at
+least 10 probes and <1% minor allele frequency (MAF). *
+
+#### Height
+
+*Depending on the trait, the sample sizes varied between 161,244 and 191,161.*
+
+There seems to be a major problem witt hte height CNVs.  A proportion of these have frequencies greater than 1. 
+
+Look at the frequency of cnvs
+
+
+```{r}
+
+a <- rbind(
+  data.frame(n=scz.del$NCNV, type="del"),
+  data.frame(n=scz.dup$NCNV, type="dup"))
+
+a$freq <- a$n/41321
+
+a$cut <- cut(a$n, breaks=c(0,1,2,5,10,20,50,100,1000) )
+tb <- table(n=a$cut,type=a$type )
+tbf <- as.data.frame(tb)
+pander(tb)
+ggplot(tbf, aes(y=Freq, x=n, col=type)) + geom_point()
+ggplot(a, aes(x=n, col=type)) + geom_density() + scale_x_log10()
+
+plot(density(a$freq))
+```
+
