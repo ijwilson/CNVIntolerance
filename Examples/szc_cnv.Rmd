@@ -1,0 +1,39 @@
+---
+title: "Schizophrenia CNV"
+output: html_notebook
+---
+
+```{r prepare}
+setwd("D:/Ian/IHG/projects/CNVIntolerance/Examples")   ## You would need to change to the directory where your file is stored
+source("helper_functions.R")
+install.load("pander", "ggplot2")
+
+## Read the non-gene centric results.
+scz.dup<- read.table("C:\\Users\\nijw\\Dropbox/CNVIntolerance/pgc_cnv/PGC_41K_QC_dup.cnv.results", header=TRUE)
+scz.del<- read.table("C:\\Users\\nijw\\Dropbox/CNVIntolerance/pgc_cnv/PGC_41K_QC_del.cnv.results", header=TRUE)
+
+head(scz.del)
+head(scz.dup)
+
+
+```
+
+We have read `r nrow(scz.del)` rows of deletions and `r nrow(scz.dup)` rows of duplications.
+
+Look at the frequency of cnvs
+
+
+```{r}
+
+a <- rbind(
+  data.frame(n=scz.del$NCNV, type="del"),
+  data.frame(n=scz.dup$NCNV, type="dup"))
+
+a$cut <- cut(a$n, breaks=c(0,1,2,5,10,20,50,100,1000) )
+tb <- table(n=a$cut,type=a$type )
+tbf <- as.data.frame(tb)
+pander(tb)
+ggplot(tbf, aes(y=Freq, x=n, col=type)) + geom_point()
+ggplot(a, aes(x=n, col=type)) + geom_density() + scale_x_log10()
+```
+

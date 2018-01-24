@@ -4,20 +4,29 @@
 source("helper_functions.R")
 
 ## read SCZ cnv results
-scz.del <- read.table("C:\\Users\\nijw\\Dropbox/CNVIntolerance/pgc_cnv/PGC_41K_QC_del_minimum8cnv.gene.results", header=TRUE)
-head(scz)
+scz.del.gene <- read.table("C:\\Users\\nijw\\Dropbox/CNVIntolerance/pgc_cnv/PGC_41K_QC_del_minimum8cnv.gene.results", header=TRUE)
+head(scz.del.gene)
+colnames(scz.del)[1] <- "gene_symbol"  ## changing the column name to match exac.scores
+
+
+## Read the non-gene centric results.
+scz.dup<- read.table("C:\\Users\\nijw\\Dropbox/CNVIntolerance/pgc_cnv/PGC_41K_QC_dup.cnv.results", header=TRUE)
+scz.del<- read.table("C:\\Users\\nijw\\Dropbox/CNVIntolerance/pgc_cnv/PGC_41K_QC_del.cnv.results", header=TRUE)
+
+head(scz.del)
+head(scz.dup)
+
 
 ## read in ExEc scores
 exac.scores <- read.table("C:\\Users\\nijw\\Dropbox/CNVIntolerance/exac-final-cnv.gene.scores071316.txt", header=TRUE)
 head(exac.scores)
-colnames(scz)[1] <- "gene_symbol"  ## changing the column name to match exac.scores
 
 ## We can now merge the two data.tables
 
-merged.table <- merge(scz, exac.scores, by="gene_symbol")
+merged.table <- merge(scz.del, exac.scores, by="gene_symbol")
 head(merged.table)
 
-nrow(scz)
+nrow(scz.del)
 nrow(exac.scores)
 nrow(merged.table)
 
