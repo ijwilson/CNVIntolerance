@@ -58,17 +58,18 @@ plot(-log10(merged.table$dev_pval), merged.table$del.sing.score)
 ### Now we can do the same for height
 
 ## read SCZ cnv results
-height_cnv <- read.csv("C:\\Users\\nijw\\Dropbox/CNVIntolerance/height_CNV_association_41467_2017_556_MOESM2_ESM.csv")
-head(height_cnv)
+load("Examples/height_cnv19.rda")
+#height_cnv <- read.csv("C:\\Users\\nijw\\Dropbox/CNVIntolerance/height_CNV_association_41467_2017_556_MOESM2_ESM.csv")
+#head(height_cnv)
 
 ## Need to get the genes associated with each CVN
 
-install.load.bioc("GenomicRanges")
+#install.load.bioc("GenomicRanges")
 
 
-gheight <- GRanges(seqnames=height_cnv$CHR, IRanges(start=height_cnv$BP, end=height_cnv$BP+1)
-                   , fdel = height_cnv$F_DEL, fdup=height_cnv$F_DUP, p=height_cnv$Pvalue.Height, 
-                   beta = height_cnv$Beta.Height )
+gheight <- GRanges(seqnames=height_cnv19$CHR, IRanges(start=height_cnv19$BP, end=height_cnv19$BP+1)
+                   , fdel = height_cnv19$F_DEL.x, fdup=height_cnv19$F_DUP.x, p=height_cnv19$'Pvalue Height', 
+                   beta = height_cnv19$'Beta Height' )
 
 ## Need teh locations of some genes
 
@@ -94,7 +95,7 @@ genesGR <- GRanges(seqnames=substring(genes.df$seqnames,4),ranges = IRanges(gene
 ## find the gene for each of these CNVs
 co <- countOverlaps(gheight, genesGR)
 gheight2 <- gheight[co>0]
-gg <- findOverlaps(gheight2[co>0], genesGR)
+gg <- findOverlaps(gheight2, genesGR)
 dups <- duplicated(queryHits(gg))
 gg <- gg[!dups]
 
@@ -119,4 +120,4 @@ merged.height <- merge(d, exac.scores, by="gene_symbol")
 
 install.load("ggplot2")
 
-ggplot(merged.height, aes(x=del.change, y=del.score)) + geom_point()
+ggplot(merged.height, aes(x=n, y=gene_length)) + geom_point() + scale_x_log10() + scale_y_log10()

@@ -11,23 +11,43 @@ install.load("pander", "ggplot2", "data.table")
 ## Read the non-gene centric results.
 scz.dup <- read.table("C:\\Users\\nijw\\Dropbox/CNVIntolerance/pgc_cnv/PGC_41K_QC_dup.cnv.results", header=TRUE)
 scz.del <- read.table("C:\\Users\\nijw\\Dropbox/CNVIntolerance/pgc_cnv/PGC_41K_QC_del.cnv.results", header=TRUE)
+gscz.dup <- GRanges(seqnames=scz.dup$CHR, IRanges(start=scz.dup$BP, width=1), z=scz.dup$z, p=scz.dup$z_pval)
+gscz.del <- GRanges(seqnames=scz.del$CHR, IRanges(start=scz.del$BP, width=1), z=scz.del$z, p=scz.del$z_pval)
 
+#
 height <- fread("C:\\Users/nijw/Dropbox/CNVIntolerance/height_CNV_association_41467_2017_556_MOESM2_ESM.csv")
+height_hg19 <- fread("C:\\Users/nijw/Dropbox/CNVIntolerance/cnv_hg19.bed")
+height_hg19[,V3:=NULL]
+colnames(height_hg19) <- c("CHR", "BP", "ID")
+height$ID <- paste("ID", height$CHR, height$BP, sep="_")
+setkey(height, ID)
+setkey(height_hg19, ID)
+
+h <- height_hg19[height]
+h[, ID := NULL]
+h[,CHR := i.CHR]
+h[,i.CHR := NULL]
+h[,i.BP := NULL]
+
+
 height_raw <- fread("C:\\Users/nijw/Dropbox/CNVIntolerance/cnv_catalogue_CNVs_2018-01-24_03_51_11.csv")
 
-check <- cbind(height_raw$BP, height$BP, height_raw$BP -  height$BP )
-check[1:10,]
+#check <- cbind(height_raw$BP, height$BP, height_raw$BP -  height$BP )
+#check[1:10,]
 
-h3 <- merge(height_raw, height, by=c("CHR", "BP"))
-
+h3 <- merge(height_raw, h, by=c("CHR", "BP"))
+height_cnv19 <- h3
 
 plot(h3$F_DUP.x, h3$F_DUP.y)
-setkey(height, CHR, BP)
-setkey(height_raw, CHR, BP)
 
-h2 <- height_raw[height]
 head(scz.del)
 head(height)
+
+save(height_cnv19, file="height_cnv19.rda")   ## saved so I don't have to go through this again
+
+gheight_cnv19 <- GRanges(height_cnv19$CHR, IRanges(height_cnv19$BP, width=1), 
+                         p = height_cnv19$`Pvalue Weight`, beta= height_cnv19$`Beta Height`)
+
 ```
 
 We have read `r nrow(scz.del)` rows of deletions and `r nrow(scz.dup)` rows of duplications for schizophrenia and `r nrow(height)` for the height study.
@@ -42,9 +62,8 @@ least 10 probes and <1% minor allele frequency (MAF). *
 
 *Depending on the trait, the sample sizes varied between 161,244 and 191,161.*
 
-There seems to be a major problem witt hte height CNVs.  A proportion of these have frequencies greater than 1. 
+There seems to be a major problem witt the height CNVs.  A proportion of these have frequencies greater than 1.   This is the same for the database frequencies that are on the web site.
 
-Look at the frequency of cnvs
 
 
 ```{r}
@@ -65,3 +84,37 @@ ggplot(a, aes(x=n, col=type)) + geom_density() + scale_x_log10()
 plot(density(a$freq))
 ```
 
+## Overlaps between scz, and height
+
+```{r}
+o <- nearest(gheight_cnv19, gscz.dup)
+res <- cbind(data.frame(gheight_cnv19), data.frame(gscz.dup[o]) )
+nrow(res)
+u <- abs(res[,2] - res[,9])<10000
+resb <- res[u,]
+hist(resb[,2]-resb[,9])
+nrow(resb)
+resb$strand <- NULL
+resb$strand <- NULL
+
+colnames(resb) <- c("seqnames","start_h","end_h","width_h","p_h","beta_h","seqnames_s","start_s","end_s","width_s","z","p_s")
+ggplot(resb, aes(x=beta_h, y=z, col=factor((p_s<0.01)  +2*(p_h<0.01)))) + geom_point(alpha=0.03)
+```
+
+### The same with deletions
+
+
+```{r}
+o2 <- nearest(gheight_cnv19, gscz.del)
+res2 <- cbind(data.frame(gheight_cnv19), data.frame(gscz.del[o2]) )
+nrow(res2)
+u2 <- abs(res2[,2] - res2[,9])<10000
+res2b <- res2[u2,]
+hist(res2b[,2]-res2b[,9])
+nrow(res2b)
+res2b$strand <- NULL
+res2b$strand <- NULL
+
+colnames(res2b) <- c("seqnames","start_h","end_h","width_h","p_h","beta_h","seqnames_s","start_s","end_s","width_s","z","p_s")
+ggplot(res2b, aes(x=beta_h, y=z, col=factor((p_s<0.01)  +2*(p_h<0.01)))) + geom_point(alpha=0.03)
+```
