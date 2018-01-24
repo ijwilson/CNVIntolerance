@@ -161,7 +161,18 @@ ExAc: https://www.nature.com/articles/nature19057
 
 -------------
 
+
+
+
 A couple more papers that might be useful
+
+
+There is some evidence of a negative genetic correlation between scz and height
+
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3939673/pdf/nihms548558.pdf
+
+
+
 
 http://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1003709
 
