@@ -2,7 +2,8 @@ library(here)
 source(here("R","prepare.R"))
 
 install.load("DBI","RSQLite")
-install.load.bioc("org.Hs.eg.db","TxDb.Hsapiens.UCSC.hg18.knownGene", "TxDb.Hsapiens.UCSC.hg19.knownGene")
+install.load.bioc("org.Hs.eg.db"
+                  ,"TxDb.Hsapiens.UCSC.hg18.knownGene", "TxDb.Hsapiens.UCSC.hg19.knownGene")
 
 txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
 genes <-  transcriptsBy(txdb, "gene")
