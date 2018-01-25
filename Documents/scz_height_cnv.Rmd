@@ -1,35 +1,58 @@
 ---
 title: "Schizophrenia and Height CNV"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
+
+
+
+A short notebook to compare and contrast the CNV profiles and locations for the schizophrenia and 
+height genome wide CNV studies.
+
+Both the schizophrenia and height CNV databases that have been downloaded are in hg18, so I don't 
+need to convert for these operations.
+
+
+### Read Data
 
 ```{r prepare, echo=FALSE, message=FALSE, warning=FALSE}
 library(here)
 source(here("R", "prepare.R"))
-install.load("pander", "ggplot2", "data.table")
+install.load("pander", "ggplot2", "data.table", "gridExtra")
 install.load.bioc("GenomicRanges") 
 
 ## Read the non-gene centric results.
-scz.dup <- read.table(dropbox("pgc_cnv/PGC_41K_QC_dup.cnv.results"), header=TRUE)
-scz.del <- read.table(dropbox("pgc_cnv/PGC_41K_QC_del.cnv.results"), header=TRUE)
-gscz.dup <- GRanges(seqnames=scz.dup$CHR, IRanges(start=scz.dup$BP, width=1), z=scz.dup$z, p=scz.dup$z_pval, f=scz.dup$NCNV/41321, fcontrol =scz.dup$UNAFF/20227 )
-gscz.del <- GRanges(seqnames=scz.del$CHR, IRanges(start=scz.del$BP, width=1), z=scz.del$z, p=scz.del$z_pval, f=scz.del$NCNV/41321, fcontrol =scz.del$UNAFF/20227 )
-genome(gscz.del) <- "hg19"
-genome(gscz.dup) <- "hg19"
+scz.dup <- fread(dropbox("pgc_cnv/PGC_41K_QC_dup.cnv.results"))
+scz.del <- fread(dropbox("pgc_cnv/PGC_41K_QC_del.cnv.results"))
 
-#
-load(here("output", "height_cnv19.rda"))
+gscz.dup <- GRanges(seqnames=scz.dup$CHR, IRanges(start=scz.dup$BP, width=1), 
+                    z=scz.dup$z, p=scz.dup$z_pval, f=scz.dup$NCNV/41321, 
+                    fcontrol =scz.dup$UNAFF/20227 , n=scz.dup$NCNV, fcase = scz.dup$AFF/21094)
+gscz.del <- GRanges(seqnames=scz.del$CHR, IRanges(start=scz.del$BP, width=1), z=scz.del$z, 
+                    p=scz.del$z_pval, f=scz.del$NCNV/41321, 
+                    fcontrol =scz.del$UNAFF/20227 , n=scz.del$NCNV, fcase = scz.del$AFF/21094)
 
-gheight_cnv19 <- GRanges(height_cnv19$CHR, IRanges(height_cnv19$BP, width=1), 
-                         p = height_cnv19$`Pvalue Weight`, beta= height_cnv19$`Beta Height`, fdel=height_cnv19$F_DEL.x, fdup = height_cnv19$F_DUP.x)
-genome(gheight_cnv19) <- "hg19"
+genome(gscz.del) <- "hg18"
+genome(gscz.dup) <- "hg18"
+
+height_cnv <- fread(dropbox("height_CNV_association_41467_2017_556_MOESM2_ESM.csv"))
+
+gheight_cnv <- GRanges(height_cnv$CHR, IRanges(height_cnv$BP, width=1), 
+                       p_height = height_cnv$`Pvalue Height`, beta_height= height_cnv$`Beta Height`, 
+                       p_bmi = height_cnv$`Pvalue BMI`, beta_bmi = height_cnv$`Beta BMI`, 
+                       fdel=height_cnv$F_DEL, fdup = height_cnv$F_DUP)
+genome(gheight_cnv) <- "hg18"
+rm(scz.dup, scz.del, height_cnv)  ##keep the workspace tidy
+
 ```
 
-We have read `r nrow(scz.del)` rows of deletions and `r nrow(scz.dup)` rows of duplications for schizophrenia and `r nrow(height)` for the height study.
+We have read `r length(gscz.del)` rows of deletions and `r length(gscz.dup)` rows of duplications for 
+schizophrenia and `r length(gheight_cnv)` cnv locations in total for the for the height study.
 
+#### Schizophrenia
 
-
-The schizophrenia data are based on  cohort of 21,094 cases and 20,227 controls, giving a total sample 
+The schizophrenia data are based on cohort of 21,094 cases and 20,227 controls, giving a total sample 
 size of 41,321. These were *A final set of rare, highquality CNVs was defined as those >20 kb in length, encompassing at
 least 10 probes and <1% minor allele frequency (MAF). *
 
@@ -37,25 +60,28 @@ least 10 probes and <1% minor allele frequency (MAF). *
 
 *Depending on the trait, the sample sizes varied between 161,244 and 191,161.*
 
-There seems to be a major problem witt the height CNVs.  A proportion of these have frequencies greater than 1.   This is the same for the database frequencies that are on the web site.
+There seems to be a major problem witt the height CNVs.  A proportion of these have frequencies greater than 1.   This is the same for the database frequencies that are on the web site.  I'll just ignore it for now (I imagine this is because some cnvs have multiple copies so this is a product of the frequency and hte number of copies).
 
 
 
 ```{r scz_frequencies}
 
 scz <- rbind(
-  data.frame(n=scz.del$NCNV, type="del"),
-  data.frame(n=scz.dup$NCNV, type="dup"))
+  data.frame(f_control=gscz.del$fcontrol, f_case = gscz.del$fcase,  n=gscz.del$n, type="del"),
+  data.frame(f_control=gscz.dup$fcontrol, f_case = gscz.dup$fcase,  n=gscz.dup$n, type="dup"))
 
-scz$freq <- scz$n/41321
 
 scz$cut <- cut(scz$n, breaks=c(0,1,2,5,10,20,50,100,1000) )
+scz$fcontrol_cat <- cut(scz$f_control, breaks=c(0,0.0001,0.0002,0.0005,0.0010,0.0020,0.0050,0.0100,1000) )
+scz$fcase_cat <- cut(scz$f_case, breaks=c(0,0.0001,0.0002,0.0005,0.0010,0.0020,0.0050,0.0100,1000) )
+table(scz$fcase_cat)
+
 tb <- table(n=scz$cut, type=scz$type )
 tbf <- as.data.frame(tb)
 pander(tbf)
 ggplot(tbf, aes(y=Freq, x=n, col=type)) + geom_point()
 
-#plot(density(a$freq))
+rm(tb, tbf, scz)
 ```
 
 ## Overlaps between scz, and height
@@ -63,52 +89,147 @@ ggplot(tbf, aes(y=Freq, x=n, col=type)) + geom_point()
 Look at the near cnvs between the schizohrenia results and the height results.
 
 
-```{r}
-gscz.dup <- gscz.dup[gscz.dup$f>=10/41321]
-nearest.scz.dup <- nearest(gheight_cnv19, gscz.dup)
-height_scz.dup <- cbind(data.frame(gheight_cnv19), data.frame(gscz.dup[nearest.scz.dup]) )
+```{r scz_duplications}
+nearest.scz.dup <- nearest(gheight_cnv, gscz.dup)
+height_scz.dup <- cbind(data.frame(gheight_cnv), data.frame(gscz.dup[nearest.scz.dup]) )
 height_scz.dup$strand <- NULL;height_scz.dup$strand <- NULL
 
-colnames(height_scz.dup) <- c("seqnames","start_h","end_h","width_h","p_h","beta_h", "fdel", "fdup", "seqnames_s","start_s","end_s","width_s","z","p_s", "f", "fcontrol")
+colnames(height_scz.dup)[c(2,12,16)] <- c("start_h","start_s","p_s")
+
+plot((height_scz.dup$fdel+height_scz.dup$fdup)/100, height_scz.dup$fcontrol, xlim=c(0,0.02), ylim=c(0,0.02))
+
 head(height_scz.dup)
 nrow(height_scz.dup)
 #distance_h_scz.dup <- distanceToNearest(gheight_cnv19, gscz.dup)
-u <- abs(height_scz.dup$start_h - height_scz.dup$start_s)<1000
+u <- abs(height_scz.dup$start_h - height_scz.dup$start_s)<10
 height_scz.dup <- height_scz.dup[u,]
 ggplot(height_scz.dup, aes(x=start_h-start_s)) + geom_histogram()
 nrow(height_scz.dup)
-height_scz.dup$col <- factor((height_scz.dup$p_s<0.01)  +2*(height_scz.dup$p_h<0.01), labels=c("NS", "S sig", "H sig", "H&S sig"))
-ggplot(height_scz.dup, aes(x=beta_h, y=z, col=col)) + geom_point(alpha=0.1) + theme(legend.title=element_blank()) + guides(colour = guide_legend(override.aes = list(alpha = 1)))
-ggplot(height_scz.dup, aes(x=fdup, y=z, col=col)) + geom_point(alpha=0.1) + theme(legend.title=element_blank()) + guides(colour = guide_legend(override.aes = list(alpha = 1)))
+height_scz.dup$h_col <- factor((height_scz.dup$p_s<0.01)  +2*(height_scz.dup$p_h<0.01), labels=c("NS", "S sig", "H sig", "H&S sig"))
+height_scz.dup$bmi_col <- factor((height_scz.dup$p_s<0.01)  +2*(height_scz.dup$p_bmi<0.01), labels=c("NS", "S sig", "BMI sig", "BMI&S sig"))
 
-height_scz.dup$raredel <- factor(height_scz.dup$fdel<0.01, levels=c(T,F), labels=c("rare del", "common del"))
-height_scz.dup$raredup <- factor(height_scz.dup$fdup<0.01, levels=c(TRUE, FALSE), labels=c("rare dup", "common dup"))
+ggplot(height_scz.dup, aes(x=beta_height, y=z, col=h_col)) + geom_point(alpha=0.1) + theme(legend.title=element_blank()) + guides(colour = guide_legend(override.aes = list(alpha = 1)))
+ggplot(height_scz.dup, aes(x=fcase, y=fcontrol, col=bmi_col)) + geom_point(alpha=0.05) + theme(legend.title=element_blank()) + guides(colour = guide_legend(override.aes = list(alpha = 1))) 
 
-ggplot(height_scz.dup, aes(x=beta_h, y=z, col=col)) + geom_point(alpha=0.1) + theme(legend.title=element_blank()) + guides(colour = guide_legend(override.aes = list(alpha = 1))) + facet_grid(raredel~raredup)
+height_scz.dup$cut_cnvfreq <- factor(cut(height_scz.dup$fdel-height_scz.dup$fdup, c(-100,-0.01,0.01,100)), labels = c("del+", "equal", "dup+"))
+
+table(height_scz.dup$cut_cnvfreq )
+
+
+
+ggplot(height_scz.dup, aes(x=fcase, y=fcontrol, col=bmi_col)) + geom_point(alpha=0.05) + theme(legend.title=element_blank()) + guides(colour = guide_legend(override.aes = list(alpha = 1))) +facet_wrap(~cut_cnvfreq, scales="free")
+
+
+
+height_scz.dup$raredel <- factor(height_scz.dup$fdel<0.005, levels=c(T,F), labels=c("rare del", "common del"))
+height_scz.dup$raredup <- factor(height_scz.dup$fdup<0.005, levels=c(TRUE, FALSE), labels=c("rare dup", "common dup"))
+
+
+
+
+
+table(height_scz.dup$cut_cnvfreq)
+table(height_scz.dup$raredel, height_scz.dup$raredup)
+
+
+ggplot(height_scz.dup, aes(x=beta_height, y=z, col=h_col)) + geom_point(alpha=0.05) + theme(legend.title=element_blank()) + guides(colour = guide_legend(override.aes = list(alpha = 1))) + facet_grid(raredel~raredup)
+
+
+ggplot(height_scz.dup, aes(x=beta_bmi, y=z, col=bmi_col)) + geom_point(alpha=0.05) + theme(legend.title=element_blank()) + guides(colour = guide_legend(override.aes = list(alpha = 1))) + facet_grid(raredel~raredup) 
+
+
 ```
 
 ### The same with deletions
 
 
-```{r}
-nearest.scz.del <- nearest(gheight_cnv19, gscz.del)
-height_scz.del <- cbind(data.frame(gheight_cnv19), data.frame(gscz.del[nearest.scz.del]) )
+```{r scz_deletions}
+nearest.scz.del <- nearest(gheight_cnv, gscz.del)
+height_scz.del <- cbind(data.frame(gheight_cnv), data.frame(gscz.del[nearest.scz.del]) )
 height_scz.del$strand <- NULL;height_scz.del$strand <- NULL
 
-colnames(height_scz.del) <- c("seqnames","start_h","end_h","width_h","p_h","beta_h","fdel","fdup","seqnames_s","start_s","end_s","width_s","z","p_s", "f", "fcontrol")
+colnames(height_scz.del)[c(2,12,16)] <- c("start_h","start_s","p_s")
 head(height_scz.del)
 nrow(height_scz.del)
 #distance_h_scz.del <- distanceToNearest(gheight_cnv19, gscz.del)
-u <- abs(height_scz.del$start_h - height_scz.del$start_s)<1000
+u <- abs(height_scz.del$start_h - height_scz.del$start_s)<100
+
+plot((height_scz.del$fdel+height_scz.del$fdup)/100, height_scz.del$fcontrol, xlim=c(0,0.02), ylim=c(0,0.02))
+
+
 height_scz.del <- height_scz.del[u,]
 ggplot(height_scz.del, aes(x=start_h-start_s)) + geom_histogram()
 nrow(height_scz.del)
-height_scz.del$col <- factor( (height_scz.del$p_s<0.01)  +2*(height_scz.del$p_h<0.01), labels=c("NS", "S sig", "H sig", "H&S sig"))
-ggplot(height_scz.del, aes(x=beta_h, y=z, col=col)) + geom_point(alpha=0.06) + theme(legend.title=element_blank()) + guides(colour = guide_legend(override.aes = list(alpha = 1)))
+height_scz.del$h_col <- factor( (height_scz.del$p_s<0.01)  +2*(height_scz.del$p_h<0.01), labels=c("NS", "S sig", "H sig", "H&S sig"))
+height_scz.del$bmi_col <- factor( (height_scz.del$p_s<0.01)  +2*(height_scz.del$p_bmi<0.01), labels=c("NS", "S sig", "BMI sig", "BMI&S sig"))
+
+
+
+height_scz.del$cut_cnvfreq <- factor(cut(height_scz.del$fdel-height_scz.del$fdup, c(-100,-0.01,0.01,100)), labels = c("del+", "equal", "dup+"))
+
+ggplot(height_scz.del, aes(x=fcase, y=fcontrol, col=bmi_col)) + geom_point(alpha=0.05) + theme(legend.title=element_blank()) + guides(colour = guide_legend(override.aes = list(alpha = 1))) +facet_wrap(~cut_cnvfreq, scales="free")
+
+
+ggplot(height_scz.del, aes(x=beta_height, y=z, col=h_col)) + geom_point(alpha=0.06) + theme(legend.title=element_blank()) + guides(colour = guide_legend(override.aes = list(alpha = 1)))
+
+
+
+
 
 height_scz.del$raredel <- factor(height_scz.del$fdel<0.01, levels=c(T,F), labels=c("rare del", "common del"))
 height_scz.del$raredup <- factor(height_scz.del$fdup<0.01, levels=c(TRUE, FALSE), labels=c("rare dup", "common dup"))
 
-ggplot(height_scz.del, aes(x=beta_h, y=z, col=col)) + geom_point(alpha=0.06) + theme(legend.title=element_blank()) + guides(colour = guide_legend(override.aes = list(alpha = 1))) + facet_grid(raredel~raredup)
+ggplot(height_scz.del, aes(x=beta_height, y=z, col=h_col)) + geom_point(alpha=0.06) + theme(legend.title=element_blank()) + guides(colour = guide_legend(override.aes = list(alpha = 1))) + facet_grid(raredel~raredup)
+
+ggplot(height_scz.del, aes(x=beta_bmi, y=z, col=bmi_col)) + geom_point(alpha=0.06) + theme(legend.title=element_blank()) + guides(colour = guide_legend(override.aes = list(alpha = 1))) + facet_grid(raredel~raredup)
+
 
 ```
+
+
+Join some stuff together
+
+
+
+
+```{r join}
+height_scz.del$scz_cnv = "del"
+height_scz.dup$scz_cnv = "dup"
+
+height_scz <- rbind(height_scz.del, height_scz.dup)
+
+ggplot(height_scz, aes(x=fcase, y=fcontrol, col=bmi_col)) + geom_point(alpha=0.05) + theme(legend.title=element_blank()) + guides(colour = guide_legend(override.aes = list(alpha = 1))) +facet_grid(scz_cnv~cut_cnvfreq)
+
+ggplot(height_scz, aes(x=fcase, y=fcontrol, col=h_col)) + geom_point(alpha=0.05) + theme(legend.title=element_blank()) + guides(colour = guide_legend(override.aes = list(alpha = 1))) +facet_grid(scz_cnv~cut_cnvfreq)
+
+```
+Have a look at the association of CNV control frequencies (from the height data) with the effect sizes for 
+scz, BMI and height.  
+
+```{r freq_control_height}
+p1 <- ggplot(height_scz, aes(x=fdel+fdup, y=z, col=h_col)) + geom_point(alpha=0.1)+ scale_x_log10()
+p2 <- ggplot(height_scz, aes(x=fdel+fdup, y=z, col=bmi_col)) + geom_point(alpha=0.1)+ scale_x_log10()
+p3 <- ggplot(height_scz, aes(x=fdel+fdup, y=beta_height, col=h_col)) + geom_point(alpha=0.05) + scale_x_log10()
+p4 <- ggplot(height_scz, aes(x=fdel+fdup, y=beta_bmi, col=bmi_col)) + geom_point(alpha=0.05) + scale_x_log10()
+grid.arrange(p1, p2, p3, p4, ncol=2)
+```
+
+Have a look at the association of CNV control frequencies (from the scz data) with the effect sizes for 
+scz, BMI and height.  
+
+```{r freq_control}
+p1 <- ggplot(height_scz, aes(x=fcontrol+0.5, y=z, col=h_col)) + geom_point(alpha=0.1)+ scale_x_log10()
+p2 <- ggplot(height_scz, aes(x=fcontrol+0.5, y=z, col=bmi_col)) + geom_point(alpha=0.1)+ scale_x_log10()
+p3 <- ggplot(height_scz, aes(x=fcontrol+0.5, y=beta_height, col=h_col)) + geom_point(alpha=0.05) + scale_x_log10()
+p4 <- ggplot(height_scz, aes(x=fcontrol+0.5, y=beta_bmi, col=bmi_col)) + geom_point(alpha=0.05) + scale_x_log10()
+grid.arrange(p1, p2, p3, p4, ncol=2)
+```
+
+In this notebook I have joined the data together, and it seems that the CNVs match almost perfectly.  The height CNVs 
+are not filtered to just very rare CNVs so there are more of the higher frequencies.  There are some CNVs that appear are
+significant for both, and the directions that these assocate with schizophrenia and height and BMI are different.  It may be that 
+we can do the same thing with p-values from genome wide significance tests, just picking the closest and it would be interesting 
+but would take a while.
+
+Why these CNV results are mapped to hg19 while the GWAS SNP results are always to hg19 I am not entirely sure but I can lift over the 
+positions of these CNVs to hg19.

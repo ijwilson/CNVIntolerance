@@ -1,7 +1,7 @@
 ---
 output:
-  word_document: default
   html_document: default
+  word_document: default
 ---
 # Genome Wide Association Studies, mutation intolerance and Copy Number Variants
 
