@@ -1,5 +1,5 @@
 ---
-title: "Schizophrenia and Height CNV"
+title: "Integrating Schizophrenia and Height Genome Wide CNV Studies"
 output:
   html_document:
     df_print: paged
@@ -53,18 +53,23 @@ schizophrenia and `r length(gheight_cnv)` cnv locations in total for the for the
 #### Schizophrenia
 
 The schizophrenia data are based on cohort of 21,094 cases and 20,227 controls, giving a total sample 
-size of 41,321. These were *A final set of rare, highquality CNVs was defined as those >20 kb in length, encompassing at
-least 10 probes and <1% minor allele frequency (MAF). *
+size of 41,321. These were :
+
+    *A final set of rare, highquality CNVs was defined as those >20 kb in length, encompassing at
+    least 10 probes and <1% minor allele frequency (MAF). *
 
 #### Height
 
 *Depending on the trait, the sample sizes varied between 161,244 and 191,161.*
 
-There seems to be a major problem witt the height CNVs.  A proportion of these have frequencies greater than 1.   This is the same for the database frequencies that are on the web site.  I'll just ignore it for now (I imagine this is because some cnvs have multiple copies so this is a product of the frequency and hte number of copies).
+There seems to be a bit of a  problem with the height CNVs.  A proportion of these have frequencies greater than 1.   This is the same for the database frequencies that are on the web site.  I'll just ignore 
+it for now (I imagine this is because some cnvs have multiple copies so this is a product 
+of the frequency and the number of copies).  More likely than this is that the height CNVs 
+are given as a percentage not as a raw frequency.
 
 
 
-```{r scz_frequencies}
+```{r scz_frequencies, cache=TRUE}
 
 scz <- rbind(
   data.frame(f_control=gscz.del$fcontrol, f_case = gscz.del$fcase,  n=gscz.del$n, type="del"),
@@ -84,25 +89,31 @@ ggplot(tbf, aes(y=Freq, x=n, col=type)) + geom_point()
 rm(tb, tbf, scz)
 ```
 
-## Overlaps between scz, and height
+## Overlaps between Schizophrenia and height
+
+
+
+### Duplications
 
 Look at the near cnvs between the schizohrenia results and the height results.
 
 
-```{r scz_duplications}
+```{r scz_duplications, echo=FALSE}
 nearest.scz.dup <- nearest(gheight_cnv, gscz.dup)
 height_scz.dup <- cbind(data.frame(gheight_cnv), data.frame(gscz.dup[nearest.scz.dup]) )
 height_scz.dup$strand <- NULL;height_scz.dup$strand <- NULL
 
 colnames(height_scz.dup)[c(2,12,16)] <- c("start_h","start_s","p_s")
 
-plot((height_scz.dup$fdel+height_scz.dup$fdup)/100, height_scz.dup$fcontrol, xlim=c(0,0.02), ylim=c(0,0.02))
+plot((height_scz.dup$fdup)/100, height_scz.dup$fcontrol, xlim=c(0,0.02), ylim=c(0,0.02))
 
 head(height_scz.dup)
 nrow(height_scz.dup)
-#distance_h_scz.dup <- distanceToNearest(gheight_cnv19, gscz.dup)
 u <- abs(height_scz.dup$start_h - height_scz.dup$start_s)<10
+
+
 height_scz.dup <- height_scz.dup[u,]
+pander(table(height_scz.dup$start_h-height_scz.dup$start_s))
 ggplot(height_scz.dup, aes(x=start_h-start_s)) + geom_histogram()
 nrow(height_scz.dup)
 height_scz.dup$h_col <- factor((height_scz.dup$p_s<0.01)  +2*(height_scz.dup$p_h<0.01), labels=c("NS", "S sig", "H sig", "H&S sig"))
@@ -152,13 +163,14 @@ colnames(height_scz.del)[c(2,12,16)] <- c("start_h","start_s","p_s")
 head(height_scz.del)
 nrow(height_scz.del)
 #distance_h_scz.del <- distanceToNearest(gheight_cnv19, gscz.del)
-u <- abs(height_scz.del$start_h - height_scz.del$start_s)<100
+u <- abs(height_scz.del$start_h - height_scz.del$start_s)<10
 
 plot((height_scz.del$fdel+height_scz.del$fdup)/100, height_scz.del$fcontrol, xlim=c(0,0.02), ylim=c(0,0.02))
 
 
 height_scz.del <- height_scz.del[u,]
 ggplot(height_scz.del, aes(x=start_h-start_s)) + geom_histogram()
+pander(table(height_scz.del$start_h-height_scz.del$start_s))
 nrow(height_scz.del)
 height_scz.del$h_col <- factor( (height_scz.del$p_s<0.01)  +2*(height_scz.del$p_h<0.01), labels=c("NS", "S sig", "H sig", "H&S sig"))
 height_scz.del$bmi_col <- factor( (height_scz.del$p_s<0.01)  +2*(height_scz.del$p_bmi<0.01), labels=c("NS", "S sig", "BMI sig", "BMI&S sig"))
