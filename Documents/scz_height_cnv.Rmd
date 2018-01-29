@@ -14,9 +14,10 @@ need to convert for these operations, so if I want to decide which genes the CNV
 I need to use hg18.
 
 
-### Read Data
+## Preparation
 
-```{r prepare, echo=FALSE, message=FALSE, warning=FALSE}
+
+```{r prepare, echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
 library(here)
 source(here("R", "prepare.R"))
 install.load("pander", "ggplot2", "data.table", "gridExtra", "reshape2")#, "gatepoints")
@@ -48,7 +49,7 @@ rm(scz.dup, scz.del, height_cnv)  ##keep the workspace tidy
 
 ```
 
-We have read `r length(gscz.del)` rows of deletions and `r length(gscz.dup)` rows of duplications for 
+We have `r length(gscz.del)` rows of deletions and `r length(gscz.dup)` rows of duplications for 
 schizophrenia and `r length(gheight_cnv)` cnv locations in total for the for the height study.
 
 #### Schizophrenia
@@ -86,19 +87,20 @@ rm(scz2)
 
 ### Tabulate frequencies
 
-```{r table_freq, echo=FALSE}
+```{r prepare_table_freq, echo=FALSE}
 scz$p <- NULL
 s <- reshape2::melt(scz, id.vars="type", variable.name="cohort", value.name="freq" )
 s$cat <- cut(s$freq, breaks=c(0,0.0001,0.0002,0.0005,0.0010,0.0020,0.0050,0.0100,1000) )
 tb <- table(cat = s$cat, cohort=s$cohort, type=s$type)
-pander(tb)
+#pander(tb)
 tbf <- as.data.frame(tb)
+#pander(tbf)
 ```
 
 ### Plot Frequencies
 
 ```{r plot_freq, echo=FALSE}
-ggplot(tbf, aes(y=Freq, x=cat, col=cohort)) + geom_point() +facet_wrap(~type)
+ggplot(tbf, aes(y=Freq, x=cat, col=cohort)) + geom_point(alpha=0.5) +facet_wrap(~type)
 
 rm(tb, tbf, scz, s)
 ```
@@ -114,7 +116,7 @@ Overall there appears to be little difference in the frequencies in the cases an
 Look at the near CNVs that are at closest in the schizohrenia and height datasets.
 
 
-```{r create_comparison_datasets, echo=FALSE}
+```{r create_comparison_datasets, echo=FALSE, warning=FALSE}
 nearest.scz.dup <- nearest(gheight_cnv, gscz.dup)    ## find the nearest duplication
 height_scz.dup <- cbind(data.frame(gheight_cnv), data.frame(gscz.dup[nearest.scz.dup]) )
 ## Tidy the combined dataset
@@ -132,8 +134,8 @@ ggplot(height_scz.dup, aes(x=fdup/100, y=fcontrol)) + geom_point(alpha=0.02) + x
 
 It is clear that by matching close CNVs we get better agreement in the CNV frequencies.  How many CNVs do we get in the four distance classes?
 
-```{r table_scz_matches_dup}
-pander(table(distance = height_scz.dup$distance))
+```{r table_scz_matches_dup, echo=FALSE}
+pander(table(distance = height_scz.dup$distance), caption="How close are the duplication matches?")
 ```
 I can cut down the number of positions to look at, and get a set of CNVs that more cosely match the frequencies in 
 both datasets by just choosing those within 100 bases.  This leaves `r sum (height_scz.dup$close)` CNVs.
@@ -141,10 +143,10 @@ both datasets by just choosing those within 100 bases.  This leaves `r sum (heig
 
 
 
-### Deletions Preparation
+### Deletions 
 
 
-```{r scz_deletions_preparation}
+```{r scz_deletions_preparation, echo=FALSE, warning=FALSE}
 
 nearest.scz.del <- nearest(gheight_cnv, gscz.del)
 height_scz.del <- cbind(data.frame(gheight_cnv), data.frame(gscz.del[nearest.scz.del]) )
@@ -169,7 +171,7 @@ pander(table(distance=height_scz.del$distance))
 
 Let's also try to join the deletions and duplications together for the scz data
 
-```{r tryjoin}
+```{r tryjoin, echo=FALSE}
 
 nearest.scz <- nearest(gscz.del, gscz.dup)
 all.scz <- cbind(data.frame(gscz.del), data.frame(gscz.dup[nearest.scz]) )[,-c(3:5,12,14:16)]
@@ -177,44 +179,60 @@ all.scz <- cbind(data.frame(gscz.del), data.frame(gscz.dup[nearest.scz]) )[,-c(3
 colnames(all.scz)[9:15] <- paste(colnames(all.scz)[2:8],"dup", sep="_")
 colnames(all.scz)[2:8] <- paste(colnames(all.scz)[2:8],"del", sep="_")
 
+
+all.scz$col <- factor((all.scz$p_dup<0.01)  +2*(all.scz$p_del<0.01), labels=c("NS", "dup sig", "del sig", "Both sig"))
 all.scz$distance <- cut(abs(all.scz$start_del - all.scz$start_dup), c(0,1, 1000, 10000,1000000000), include.lowest=TRUE)
-table(all.scz$distance)
+
+pander(table(all.scz$distance), caption="Distance from deletion CNV to0 nearest duplication CNV")
+ggplot(all.scz[all.scz$distance=="[0,1]",], aes(y=z_del, x=z_dup, col=col)) + geom_point(alpha=0.1)
+all.scz <- all.scz[all.scz$distance=="[0,1]",]
+attach(all.scz)
+gall.scz <- GRanges(seqnames=all.scz$seqnames, IRanges(all.scz$start_del, width=1), 
+                    zdel=z_del, zdup=z_dup,
+                    pdel=p_del, pdup=p_dup,
+                    fcase_del=fcase_del, fcase_dup=fcase_dup,
+                    fcontrol_del=fcontrol_del, fcontrol_dup=fcontrol_dup,
+                    n_del=n_del, n_dup=n_dup)
+genome(gall.scz) <- "hg18"
+detach(all.scz)
+rm(all.scz)
 ```
 
-For a majority of the locations I can just use the deletions and duplications together.
+For a majority of the locations I could just use the deletions and duplications together.
 
 
-### Analysis
+## Analysis
 
-#### Duplication
+### Duplication
 
-```{r dup_analysis}
+```{r dup_analysis, echo=FALSE}
 height_scz.dup <- height_scz.dup[height_scz.dup$close, ]   #use just those that are close
-pander(table(cut(height_scz.dup$start_h-height_scz.dup$start_s, breaks=c(-100,-50,-10,-1,0,1,10,50,100))))
-
+pander(table(cut(height_scz.dup$start_h-height_scz.dup$start_s, breaks=c(-100,-50,-10,-1,0,1,10,50,100))), caption="Difference in Position between Height and SCZ CNV")
+```
 #ggplot(height_scz.dup, aes(x=start_h-start_s)) + geom_histogram()
-
+```{r dup_plots, echo=FALSE}
 height_scz.dup$h_col <- factor((height_scz.dup$p_s<0.01)  +2*(height_scz.dup$p_h<0.01), labels=c("NS", "S sig", "H sig", "H&S sig"))
 height_scz.dup$bmi_col <- factor((height_scz.dup$p_s<0.01)  +2*(height_scz.dup$p_bmi<0.01), labels=c("NS", "S sig", "BMI sig", "BMI&S sig"))
-
-ggplot(height_scz.dup, aes(x=beta_height, y=z, col=h_col)) + geom_point(alpha=0.1) + theme(legend.title=element_blank()) + guides(colour = guide_legend(override.aes = list(alpha = 1))) + ggtitle("Effect Sizes for Height vs SCZ") 
-
-
-p1 <- ggplot(height_scz.dup, aes(x=fcontrol, y=fcase, col=h_col)) + geom_point(alpha=0.05) + theme(legend.title=element_blank()) + guides(colour = guide_legend(override.aes = list(alpha = 1))) 
-p2 <-ggplot(height_scz.dup, aes(x=fcontrol, y=fcase, col=bmi_col)) + geom_point(alpha=0.05) + theme(legend.title=element_blank()) + guides(colour = guide_legend(override.aes = list(alpha = 1))) 
-grid.arrange(p1, p2, ncol=2)
-
-
 height_scz.dup$cut_cnvfreq <- factor(cut(height_scz.dup$fdel-height_scz.dup$fdup, c(-100,-0.01,0.01,100)), labels = c("del+", "equal", "dup+"))
+height_scz.dup$raredel <- factor(height_scz.dup$fdel/100<0.0002, levels=c(T,F), labels=c("rare del", "common del"))
+height_scz.dup$raredup <- factor(height_scz.dup$fdup/100<0.0002, levels=c(TRUE, FALSE), labels=c("rare dup", "common dup"))
+
+
+
+ggplot(height_scz.dup, aes(x=beta_height, y=z, col=h_col)) + geom_point(alpha=0.1) + theme(legend.title=element_blank()) + guides(colour = guide_legend(override.aes = list(alpha = 1))) + ggtitle("Effect Sizes for Height vs SCZ") + geom_point(data=height_scz.dup[height_scz.dup$hcol!="NS",], aes(x=beta_height, y=z, col=h_col), alpha=1)
+
+if (FALSE) {
+  p1 <- ggplot(height_scz.dup, aes(x=fcontrol, y=fcase, col=h_col)) + geom_point(alpha=0.05) + theme(legend.title=element_blank()) + guides(colour = guide_legend(override.aes = list(alpha = 1))) 
+  p2 <-ggplot(height_scz.dup, aes(x=fcontrol, y=fcase, col=bmi_col)) + geom_point(alpha=0.05) + theme(legend.title=element_blank()) + guides(colour = guide_legend(override.aes = list(alpha = 1))) 
+  grid.arrange(p1, p2, ncol=2, top=)
+}
+
 
 ggplot(height_scz.dup, aes(x=fcase, y=fcontrol, col=bmi_col)) + geom_point(alpha=0.05) + theme(legend.title=element_blank()) + guides(colour = guide_legend(override.aes = list(alpha = 1))) +facet_wrap(~cut_cnvfreq) #, scales="free")
 
 
-height_scz.dup$raredel <- factor(height_scz.dup$fdel<0.005, levels=c(T,F), labels=c("rare del", "common del"))
-height_scz.dup$raredup <- factor(height_scz.dup$fdup<0.005, levels=c(TRUE, FALSE), labels=c("rare dup", "common dup"))
 
-
-table(height_scz.dup$cut_cnvfreq)
+#table(height_scz.dup$cut_cnvfreq)
 table(height_scz.dup$raredel, height_scz.dup$raredup)
 
 
@@ -225,7 +243,7 @@ ggplot(height_scz.dup, aes(x=beta_bmi, y=z, col=bmi_col)) + geom_point(alpha=0.0
 ```
 
 
-### Deletion Analysis
+### Deletion
 
 ```{r analyse_deletion}
 height_scz.del <- height_scz.del[height_scz.del$close,]
@@ -275,7 +293,7 @@ ggplot(height_scz, aes(x=fcase, y=fcontrol, col=h_col)) + geom_point(alpha=0.05)
 Have a look at the association of CNV control frequencies (from the height data) with the effect sizes for 
 scz, BMI and height.  
 
-```{r freq_control_height}
+```{r freq_control_height, echo=FALSE}
 p1 <- ggplot(height_scz, aes(x=fdel+fdup, y=z, col=h_col)) + geom_point(alpha=0.1)+ scale_x_log10() + guides(colour = guide_legend(override.aes = list(alpha = 1)))
 p2 <- ggplot(height_scz, aes(x=fdel+fdup, y=z, col=bmi_col)) + geom_point(alpha=0.1)+ scale_x_log10()+ guides(colour = guide_legend(override.aes = list(alpha = 1)))
 p3 <- ggplot(height_scz, aes(x=fdel+fdup, y=beta_height, col=h_col)) + geom_point(alpha=0.05) + scale_x_log10()+ guides(colour = guide_legend(override.aes = list(alpha = 1)))
@@ -286,12 +304,12 @@ grid.arrange(p1, p2, p3, p4, ncol=2, top="Height data CNV Frequencies and Effect
 Have a look at the association of CNV control frequencies (from the scz data) with the effect sizes for 
 scz, BMI and height.  
 
-```{r freq_control}
+```{r freq_control, echo=FALSE}
 p1 <- ggplot(height_scz, aes(x=fcontrol+0.5, y=z, col=h_col)) + geom_point(alpha=0.1)+ scale_x_log10() + guides(colour = guide_legend(override.aes = list(alpha = 1)))
 p2 <- ggplot(height_scz, aes(x=fcontrol+0.5, y=z, col=bmi_col)) + geom_point(alpha=0.1)+ scale_x_log10() + guides(colour = guide_legend(override.aes = list(alpha = 1)))
 p3 <- ggplot(height_scz, aes(x=fcontrol+0.5, y=beta_height, col=h_col)) + geom_point(alpha=0.05) + scale_x_log10() + guides(colour = guide_legend(override.aes = list(alpha = 1)))
 p4 <- ggplot(height_scz, aes(x=fcontrol+0.5, y=beta_bmi, col=bmi_col)) + geom_point(alpha=0.05) + scale_x_log10() + guides(colour = guide_legend(override.aes = list(alpha = 1)))
-grid.arrange(p1, p2, p3, p4, ncol=2)
+grid.arrange(p1, p2, p3, p4, ncol=2, top="SCZ data Control CNV Frequencies and Effect Sizes")
 ```
 
 In this notebook I have joined the data together, and it seems that the CNVs match almost perfectly.  The height CNVs 
@@ -320,8 +338,22 @@ if (FALSE) {
   x11()
   plot(height_scz.dup$fcontrol, height_scz.dup$fcase, col=height_scz.dup$h_col, pch=18)
   l <- fhs(data.frame(x=height_scz.dup$fcontrol, y=height_scz.dup$fcase))
+  x11()
+    plot(height_scz.dup$beta_height, height_scz.dup$z, col=height_scz.dup$h_col, pch=18)
+  l <- fhs(data.frame(x=height_scz.dup$beta_height, y=height_scz.dup$z))
+    cat("c(",paste(as.numeric(l),collapse=","),")", sep="")
+  x11()
+    plot(height_scz.dup$beta_bmi, height_scz.dup$z, col=height_scz.dup$h_col, pch=18)
+  l <- fhs(data.frame(x=height_scz.dup$beta_bmi, y=height_scz.dup$z))
+    cat("c(",paste(as.numeric(l),collapse=","),")", sep="")
+
 }
 id_dup <- c(12478,12479,12480,12481,12482,12483,12484,12485,12486,12487,12488,12489,12490,12491,12492,12493,12494,12495,12496,12497,12498,12499,12500,12501,12502,12503,12504,12505,12506,12507,12508,12509,12510,12511,12512,12513,12514,12515,12516,12517,12518,12519,12520,12521,12522,12523,12524,12525,12526,12527,12528,12529,12530,12531)
+id_dup2 <- c(344,345,346,347,348,349,350,351,352,353,354,355,356,357,358,359,360,361,363,364,365,366,367,368,369,370,371,372)
+id_dup3 <- c(12532,12533)
+id_dup4 <- c(9515,9516,9517,9518,9520,9521)
+
+
 
 
 plot_subset_regions <- function(id, target, ex=2000000) {
@@ -335,7 +367,7 @@ plot_subset_regions <- function(id, target, ex=2000000) {
   scz_del_region <- subsetByOverlaps(gscz.del, plot_region)
   scz_dup_region <- subsetByOverlaps(gscz.dup, plot_region)
 
-  yrange <- range(height_region$beta_height, scz_del_region$z, scz_dup_region$z)
+  yrange <- range(height_region$beta_height, height_region$beta_bmi, scz_del_region$z, scz_dup_region$z)
   
   plot(start(height_region), height_region$beta_height, ylim=yrange, axes=FALSE)
     points(start(height_region), height_region$beta_bmi, col="blue")
@@ -362,6 +394,9 @@ axis(1);axis(2)
 }
 
 plot_subset_regions(id_dup,height_scz.dup, ex=2000000 )
+plot_subset_regions(id_dup2,height_scz.dup, ex=2000000 )
+plot_subset_regions(id_dup3,height_scz.dup, ex=2000000 )
+plot_subset_regions(id_dup4,height_scz.dup, ex=2000000 )
 
 
 
@@ -404,6 +439,9 @@ plot_subset_regions(l_del3,height_scz.del, ex=2000000 )
 
 ## Gene Centric Analysis
 
+I would normally do this first but want to look at how the results from the position analysis match up with
+the gene centric analysis.
+
 ```{r prep_genes, echo=FALSE}
 load(here("output", "genesGR.rda"))
 genome(genesGR18) <- "hg18"
@@ -413,7 +451,7 @@ genome(genesGR18) <- "hg18"
 
 Count overlaps between CNVs and genes, then count overlaps between significant CNVs and genes. 
 
-```{r}
+```{r count_overlaps_raw}
 count_scz.del <- countOverlaps(genesGR18, gscz.del[gscz.del$n>5])
 
 count_height <- countOverlaps(genesGR18, gheight_cnv)
@@ -426,7 +464,7 @@ scz_del are `r 2680+2103`.
 
 So filter by those genes that are available in both
 
-```{r}
+```{r count_overlaps_significant}
 filtered_genes_dup <- genesGR18[count_height>1 & count_scz.del>1]
 
 count_sig_scz.del <- countOverlaps(filtered_genes_dup, gscz.del[gscz.del$p<0.01])
@@ -439,7 +477,7 @@ chisq.test(tb)
 
 Count overlaps between CNVs and genes, then count overlaps between significant CNVs and genes. 
 
-```{r}
+```{r overlaps_deletion}
 count_scz.del <- countOverlaps(genesGR18, gscz.dup[gscz.dup$n>5])
 
 table(height=count_height>0, scz_del =count_scz.del>0 )
@@ -448,7 +486,7 @@ table(height=count_height>0, scz_del =count_scz.del>0 )
 
 Filter by those genes that are available in both
 
-```{r}
+```{r significant_overlaps_deletion}
 filtered_genes <- genesGR18[count_height>1 & count_scz.del>1]
 
 count_sig_scz.del <- countOverlaps(filtered_genes, gscz.del[gscz.del$p<0.01])
