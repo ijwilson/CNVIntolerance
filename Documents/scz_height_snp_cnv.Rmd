@@ -11,7 +11,7 @@ are related in any way.  There is a manuscript that looks at this
 
 > The genetic overlap between schizophrenia and height.  Schizophr Res. 2013. 151: 226–228.
 
-But this doesn't really do anything.  Is there anything in these data?
+But this doesn't really say anything.  Is there anything in these data?
 
 
 
@@ -19,7 +19,7 @@ But this doesn't really do anything.  Is there anything in these data?
 ```{r}
 library(here)
 source(here("R","prepare.R"))
-install.load("ggplot2")
+install.load("ggplot2", "pander")
 install.load.bioc("GenomicRanges")
 load(here("output", "GWAS_scz_summary.rda"))
 load(here("output", "remapped_cnv.rda"))
@@ -67,6 +67,7 @@ ggplot(combined[combined$distance=="(-1,1]",], aes(x=b, y=beta_height)) + geom_p
 count_height19 <- countOverlaps(gheight_cnv19, gheight_gwas)
 table(count_height19)
 
+pander(tb)
 tb <- table(combined$beta_height>0, combined$b>0)
 chisq.test(tb)
 ```
