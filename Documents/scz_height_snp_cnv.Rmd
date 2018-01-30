@@ -1,9 +1,20 @@
 ---
-title: "R Notebook"
+title: "Comparison of Genome Wide CNV and SNP results"
 output:
   html_document:
     df_print: paged
 ---
+
+
+The document looks at a pair of genome wide SNP resutls, fo4r height and for schizophrenia and tries to see if the results 
+are related in any way.  There is a manuscript that looks at this
+
+> The genetic overlap between schizophrenia and height.  Schizophr Res. 2013. 151: 226–228.
+
+But this doesn't really do anything.  Is there anything in these data?
+
+
+
 
 ```{r}
 library(here)
@@ -101,6 +112,5 @@ csq <- chisq.test(table(snp$b>0, snp$or>1))
 
 snp$distance <- cut(abs(snp$start_scz-snp$start_h),c(-1,1,10,100,1000,100000,1E8))
 table(snp$distance)
-ggplot(snp[snp$distance=="(-1,1]",], aes(x=b, y=or, col=factor((p_scz<0.0001)+2*(p_h<0.0001)))) + geom_point(alpha=0.05)
-
+ggplot(snp[snp$distance=="(-1,1]",], aes(x=b, y=or, col=factor((p_scz<0.0001)+2*(p_h<0.0001)))) + geom_point(alpha=0.05) + guides(colour = guide_legend(override.aes = list(alpha = 1))) 
 ```

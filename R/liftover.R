@@ -22,7 +22,7 @@ write.table(cbind(paste("chr",cnvdat$CHR,sep=""), cnvdat$BP, cnvdat$BP+1, cnvdat
 scz.dup <- fread(dropbox("pgc_cnv/PGC_41K_QC_dup.cnv.results"))
 scz.del <- fread(dropbox("pgc_cnv/PGC_41K_QC_del.cnv.results"))
 scz.dup$ID <-  paste("ID", scz.dup$CHR, scz.dup$BP, sep="_")
-scz.del$ID <-  paste("ID", scz.dup$CHR, scz.dup$BP, sep="_")
+scz.del$ID <-  paste("ID", scz.del$CHR, scz.dup$BP, sep="_")
 
 cnvdat <- scz.dup
 
