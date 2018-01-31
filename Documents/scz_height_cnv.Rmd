@@ -113,7 +113,7 @@ Overall there appears to be little difference in the frequencies in the cases an
 
 #### Preparation
 
-Look at the near CNVs that are at closest in the schizohrenia and height datasets.
+Look at the near CNVs that are at closest in the schizophrenia and height datasets.
 
 
 ```{r create_comparison_datasets, echo=FALSE, warning=FALSE}
@@ -196,6 +196,7 @@ gall.scz <- GRanges(seqnames=all.scz$seqnames, IRanges(all.scz$start_del, width=
 genome(gall.scz) <- "hg18"
 detach(all.scz)
 rm(all.scz)
+save(gall.scz, file=here("output", "gall_scz.gz"))
 ```
 
 For a majority of the locations I could just use the deletions and duplications together.
@@ -435,75 +436,4 @@ plot_subset_regions(l_del3,height_scz.del, ex=2000000 )
 
 
 ```
-
-
-## Gene Centric Analysis
-
-I would normally do this first but want to look at how the results from the position analysis match up with
-the gene centric analysis.
-
-```{r prep_genes, echo=FALSE}
-load(here("output", "genesGR.rda"))
-genome(genesGR18) <- "hg18"
-```
-
-### height and SCZ
-
-Count overlaps between CNVs and genes, then count overlaps between significant CNVs and genes. 
-
-```{r count_overlaps_raw}
-count_scz.del <- countOverlaps(genesGR18, gscz.del[gscz.del$n>5])
-
-count_height <- countOverlaps(genesGR18, gheight_cnv)
-
-table(height=count_height>0, scz_del =count_scz.del>0 )
-```
-
-So the total number of genes that have overlaps from height CNV are `r 2210+2103`, and hte total number from
-scz_del are `r 2680+2103`.
-
-So filter by those genes that are available in both
-
-```{r count_overlaps_significant}
-filtered_genes_dup <- genesGR18[count_height>1 & count_scz.del>1]
-
-count_sig_scz.del <- countOverlaps(filtered_genes_dup, gscz.del[gscz.del$p<0.01])
-count_height.sig <- countOverlaps(filtered_genes_dup, gheight_cnv[gheight_cnv$p_height<0.01])
-tb <- table(height_sig = count_height.sig>0, scz_del_sig = count_sig_scz.del>0)
-tb
-
-chisq.test(tb)
-```
-
-Count overlaps between CNVs and genes, then count overlaps between significant CNVs and genes. 
-
-```{r overlaps_deletion}
-count_scz.del <- countOverlaps(genesGR18, gscz.dup[gscz.dup$n>5])
-
-table(height=count_height>0, scz_del =count_scz.del>0 )
-```
-
-
-Filter by those genes that are available in both
-
-```{r significant_overlaps_deletion}
-filtered_genes <- genesGR18[count_height>1 & count_scz.del>1]
-
-count_sig_scz.del <- countOverlaps(filtered_genes, gscz.del[gscz.del$p<0.01])
-count_height.sig <- countOverlaps(filtered_genes, gheight_cnv[gheight_cnv$p_height<0.01])
-tb <- table(height_sig = count_height.sig>0, scz_del_sig = count_sig_scz.del>0)
-tb
-
-chisq.test(tb)
-```
-
-
-So there apppears to be a tendency for CNVs that are associated with one to be the same as CNVs that are 
-associated with the other, but it may be that I need a more sophisticated way of doing the 
-significance testing, since it may just be that these are the genes where it is possible to 
-get significant results for both.
-
-
-We could do the same thing with SNPs. 
-
 

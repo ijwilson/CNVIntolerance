@@ -4,6 +4,20 @@ source(here("R","prepare.R"))
 ## Load file to give locations for rs numbers
 ## https://bioconductor.org/packages/release/data/annotation/html/SNPlocs.Hsapiens.dbSNP144.GRCh37.html
 ## load scz GWAS summary statistics
+# 
+# scz2.snp.results.txt.gz (header row and 9,444,230 SNPs)
+# hg19chrc hg19 chromosome as character string (chr1-chr22, chrX)
+# snpid rs ID of SNP
+# a1 reference allele for OR (may not be minor allele)
+# a2 alternate allele
+# bp hg19 base pair position of SNP
+# info imputation quality score
+# or odds ratio in PGC GWAS data
+# se standard error of ln(OR) in PGC GWAS data
+# p p-value in PGC GWAS data
+# ngt number of samples in which SNP directly genotyped
+
+
 
 if (!dir.exists(here("output"))) {
   dir.create(here("output"))

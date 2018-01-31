@@ -15,6 +15,74 @@ But this doesn't really say anything.  Is there anything in these data?
 
 
 
+## Data Sources
+
+### SNPs
+
+#### SCZ
+
+From the [Psychiatric Genetics Consortium](ttp://www.med.unc.edu/pgc/results-and-downloads)
+
+This is dataset SCZ2.  I believe that the locations are hg19.  There are 9444230 SNPs.
+
+> .. we report the results of a multi-stage schizophrenia genome-wide association study of up to 36,989
+> cases and 113,075 controls … We obtained genome-wide genotype data from which we constructed 49
+> ancestry matched, non-overlapping case-control samples (46 of European and three of East Asian
+> ancestry, 34,241 cases and 45,604 controls) and 3 family-based samples of European ancestry (1,235
+> parent affected-offspring trios). These samples comprise the primary PGC GWAS meta-analysis.
+> Genotype data from all studies were processed by the PGC using unified quality control procedures
+> followed by imputation of SNPs and insertion-deletions using the 1000 Genomes Project reference panel.
+> In each sample, association testing was conducted with PLINK using imputed marker dosages and
+> principal components (PCs) to control for population stratification. The results were combined using an
+> inverse-weighted fixed effects model. After quality control (imputation INFO score ≥ 0.6, MAF ≥ 0.01, and
+> successfully imputed in ≥ 20 samples), we considered around 9.5 million variants … For the subset of LDindependent
+> SNPs with P < 1x10-6 in the meta-analysis, we next obtained data from deCODE genetics
+> (1,513 cases and 66,236 controls of European ancestry). We define LD-independent SNPs as those with
+> low LD (r2 < 0.1) to a more significantly associated SNP within a 500 kb window. Given that high LD in the
+> extended MHC region spans ~8 Mb, we conservatively include only a single MHC SNP. The deCODE
+> data were then combined with those from the primary GWAS to give a dataset of 36,989 cases and
+> 113,075 controls. In this final analysis, 128 LD-independent SNPs surpassed genome-wide significance
+> (P ≤ 5x10-8) 
+> … We defined an associated locus as the physical region containing all SNPs correlated with
+> each of the 128 index SNPs at r2 > 0.6. Associated loci within 250 kb of each other were merged. This
+> process resulted in 108 physically distinct associated loci.
+
+> hg19chrc hg19 chromosome as character string (chr1-chr22, chrX)
+> snpid rs ID of SNP
+> a1 reference allele for OR (may not be minor allele)
+> a2 alternate allele
+> bp hg19 base pair position of SNP
+> info imputation quality score
+> or odds ratio in PGC GWAS data
+> se standard error of ln(OR) in PGC GWAS data
+> p p-value in PGC GWAS data
+> ngt number of samples in which SNP directly genotyped
+
+
+#### Height
+
+Downloaded from the [GIANT consortium](http://portals.broadinstitute.org/collaboration/giant/index.php/GIANT_consortium_data_files)
+
+I am using the `GWAS Anthropometric 2014 Height`. There are 2550858 rows in the summary statistics.
+
+
+ Data File Description:
+> Each file consists of the following information for each SNP and its association to the specified trait based on meta-analysis in the respective publication. Significant digits for the p values, betas and standard errors are limited to two digits to further limit the possibility of identifiability.
+
+> MarkerName: The dbSNP name of the genetic marker
+> Allele1: The first allele (hg19 + strand). Where the regression coefficients (betas) are provided, the first allele is the effect allele. Where betas are not provided (typically the 2010 data), the first allele is the trait-increasing allele.
+> Allele2: The second allele (hg19 + strand)
+> Freq.Allele1.HapMapCEU: The allele frequency of Allele1 in the HapMap CEU population
+> b: beta
+> SE: standard error
+> p: p-value after meta-analysis using regression coefficients (beta and standard error), and after correction for inflation of test statistics using genomic control both at the individual study level and again after meta-analysis
+> N: Number of observations
+
+
+### CNVs
+
+The CNVs for both the height and schizoprenia datasets have been converted to hg19.
+
 
 ```{r}
 library(here)
@@ -46,8 +114,7 @@ rm(height_cnv19, scz.del19, scz.dup19)
 
 
 ```{r prepare_gwas, cache=TRUE}
-  gscz_gwas <- GRanges(seqnames=GWAS_scz_summary$chr, IRanges(start=GWAS_scz_summary$bp, width=1, names=GWAS_scz_summary$snpid)
-                     , or=GWAS_scz_summary$or, p=GWAS_scz_summary$p)
+  gscz_gwas <- GRanges(seqnames=GWAS_scz_summary$chr, IRanges(start=GWAS_scz_summary$bp, width=1, names=GWAS_scz_summary$snpid), or=GWAS_scz_summary$or, p=GWAS_scz_summary$p)
   gheight_gwas <- GRanges(seqnames=GWAS_height_summary$seqnames, 
                 IRanges(start=GWAS_height_summary$pos, width=1, names=GWAS_height_summary$MarkerName),
                 b=GWAS_height_summary$b, p=GWAS_height_summary$p)
@@ -61,7 +128,7 @@ near <- nearest(gheight_cnv19, gheight_gwas)
 combined  <- cbind(as.data.frame(gheight_cnv19, row.names=NULL), as.data.frame(gheight_gwas[near], row.names=NULL))
 combined[,c(3,4,5,12,14,15,16)] <- NULL
 colnames(combined)[c(2,9)] <- c("start_cnv", "start_snp")
-combined$distance <- cut(abs(combined$start_cnv-combined$start_snp),c(-1,1,10,100,1000,100000,1E8))
+combined$distance <- cut(abs(combined$start_cnv-combined$start_snp), c(-1,1,10,100,1000,100000,1E8))
 ggplot(combined[combined$distance=="(-1,1]",], aes(x=b, y=beta_height)) + geom_point(alpha=0.1)
 
 count_height19 <- countOverlaps(gheight_cnv19, gheight_gwas)

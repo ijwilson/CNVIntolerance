@@ -1,0 +1,176 @@
+---
+title: "Height and SCZ association - gene centric analysis"
+output: html_notebook
+---
+
+```{r prepare, echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+library(here)
+source(here("R", "prepare.R"))
+install.load("pander", "ggplot2", "data.table", "gridExtra", "reshape2")#, "gatepoints")
+install.load.bioc("GenomicRanges") 
+
+## Read the non-gene centric results.
+scz.dup <- fread(dropbox("pgc_cnv/PGC_41K_QC_dup.cnv.results"))
+scz.del <- fread(dropbox("pgc_cnv/PGC_41K_QC_del.cnv.results"))
+
+gscz.dup <- GRanges(seqnames=scz.dup$CHR, IRanges(start=scz.dup$BP, width=1), 
+                    z=scz.dup$z, p=scz.dup$z_pval, f=scz.dup$NCNV/41321, 
+                    fcontrol =scz.dup$UNAFF/20227 , n=scz.dup$NCNV, fcase = scz.dup$AFF/21094)
+
+gscz.del <- GRanges(seqnames=scz.del$CHR, IRanges(start=scz.del$BP, width=1), z=scz.del$z, 
+                    p=scz.del$z_pval, f=scz.del$NCNV/41321, 
+                    fcontrol =scz.del$UNAFF/20227 , n=scz.del$NCNV, fcase = scz.del$AFF/21094)
+
+genome(gscz.del) <- "hg18"
+genome(gscz.dup) <- "hg18"
+
+height_cnv <- fread(dropbox("height_CNV_association_41467_2017_556_MOESM2_ESM.csv"))
+
+gheight_cnv <- GRanges(height_cnv$CHR, IRanges(height_cnv$BP, width=1), 
+                       p_height = height_cnv$`Pvalue Height`, beta_height= height_cnv$`Beta Height`, 
+                       p_bmi = height_cnv$`Pvalue BMI`, beta_bmi = height_cnv$`Beta BMI`, 
+                       fdel=height_cnv$F_DEL, fdup = height_cnv$F_DUP)
+genome(gheight_cnv) <- "hg18"
+rm(scz.dup, scz.del, height_cnv)  ##keep the workspace tidy
+
+```
+
+## Gene Centric Analysis
+
+I would normally do this first but want to look at how the results from the position analysis match up with
+the gene centric analysis.
+
+```{r prep_genes, echo=FALSE}
+load(here("output", "genesGR.rda"))
+genome(genesGR18) <- "hg18"
+```
+
+### height and SCZ
+
+Count overlaps between CNVs and genes, then count overlaps between significant CNVs and genes. 
+
+```{r count_overlaps_raw}
+count_scz.del <- countOverlaps(genesGR18, gscz.del[gscz.del$n>0])
+count_height <- countOverlaps(genesGR18, gheight_cnv)
+table(height=count_height>0, scz_del=count_scz.del>0 )
+```
+
+So the total number of genes that have overlaps from any height CNV is `r 2210+2103`, and the total number from
+scz_del is `r 2680+2103`.
+
+So filter by those genes that are available in both
+
+```{r count_overlaps_significant}
+filtered_genes_dup <- genesGR18[count_height>0 & count_scz.del>0]
+
+count_sig_scz.del <- countOverlaps(filtered_genes_dup, gscz.del[gscz.del$p<0.01])
+count_height.sig <- countOverlaps(filtered_genes_dup, gheight_cnv[gheight_cnv$p_height<0.01])
+
+tb <- table(height_sig = cut(count_height.sig, breaks=c(0,1,10,1000), include.lowest = T), scz_del_sig = cut(count_sig_scz.del, breaks=c(-1,1,10,1000)))
+tb
+
+chisq.test(tb)
+```
+
+
+I would not be entirely sure that this may not be a chance event, after all if the probability of a 
+significant event is  dependent on the frequency of CNVs in a region then this will resul in an association between
+the tests even if there is no association.
+
+Try to show this by simulation.  This is quite subtle, and only works because of the huge numbers of genes that you test.
+
+```{r}
+
+testassoc <- function(ngenes=20000, b1=0.1, b2=10000, minobs=1) {
+  freq <- rbeta(ngenes, b1, b2)
+  mu1 <- 500000*freq
+  mu2 <- 500000*freq
+
+#hist(mu)
+  m1 <- matrix(rpois(2*ngenes, mu1), ncol=2)
+  m2 <- matrix(rpois(2*ngenes, mu2), ncol=2)
+  u <-rowSums(m1)>minobs & rowSums(m2)>minobs
+
+  m1 <- m1[u, ]
+  m2 <- m2[u, ]
+
+  p1 <- apply(m1, 1,function(x) poisson.test(c(x[1],x[2]),c(1,1))$p.value)
+  p2 <- apply(m2, 1,function(x) poisson.test(c(x[1],x[2]),c(1,1))$p.value)
+
+  tb <- table(p1<0.05, p2<0.05)
+  fisher.test(tb, simulate.p.value = TRUE)$p.value 
+}
+
+if (FALSE) {
+
+allres3 <- replicate(100, testassoc(minobs=3))
+}
+allres <-
+c(0.0727691903857923, 0.124183724817559, 0.978466578869038, 0.477017629624399, 
+0.925128138685278, 0.139312898873176, 0.256189621594847, 0.215765781765934, 
+0.863649740257562, 0.187720640835895, 0.201176973573231, 0.999999999999996, 
+0.79393373652034, 0.826600936157626, 0.00326253728593037, 0.229339984796683, 
+0.169263967500973, 0.999999999999999, 0.228504889305372, 0.526850098022093, 
+0.356949538437953, 0.978031734152374, 0.195091594127435, 0.320417297450602, 
+0.573741416079879, 0.267365074273104, 0.999999999999998, 0.999999999999999, 
+0.265294317594785, 0.56781102755246, 0.999999999999818, 0.000808177664674878, 
+0.0762881256069144, 0.236596351926651, 0.235414362136546, 0.881846083809458, 
+0.481694809900517, 0.245796629859504, 1, 0.0597450558520679, 
+0.0948619058314064, 0.962874070090174, 0.929444507143096, 0.369782223114702, 
+0.999999999999998, 0.278733524865539, 0.696028201855878, 0.206934216292964, 
+0.0020037368367429, 0.999999999999998, 0.999999999999972, 0.811984141731504, 
+0.999999999999837, 0.999999999999857, 0.000301471815759727, 0.213754630987113, 
+0.133741517383056, 0.999999999999998, 0.000112402335844826, 0.943649447573669, 
+0.697573626194016, 0.665212422738495, 0.0608934829809533, 0.842863714052788, 
+0.0974160249521934, 0.433912718774901, 0.7344985698001, 0.859312698213469, 
+0.860195131983396, 0.76061830243989, 0.968396684350365, 0.235990566582908, 
+0.0085251237278759, 0.999999999999996, 0.567441926661918, 0.0508553309620202, 
+0.693503697428556, 0.999999999999827, 0.926046807989673, 0.394415494075574, 
+0.999999999999877, 0.999999999999797, 0.999999999999834, 0.999999999999822, 
+0.0328348890120446, 0.376520542793887, 0.0527655003238879, 0.999999999999994, 
+0.971099057735468, 0.641972788309555, 0.0207795986485313, 0.59171365222468, 
+0.849947038569649, 0.999999999999826, 0.420915411934923, 0.574566587763495, 
+0.793543332563379, 0.999999999999995, 0.925138720699249, 0.613704777418898
+)
+```
+
+
+
+Try the both dataset
+
+```{r}
+load(file=here("output", "gall_scz.gz"))
+```
+
+Count overlaps between CNVs and genes, then count overlaps between significant CNVs and genes. 
+
+```{r overlaps_deletion}
+count_height <- countOverlaps(genesGR18, gheight_cnv)
+count_scz.all <- countOverlaps(genesGR18, gall.scz)
+table(height=count_height>0, scz_all =count_scz.all>0 )
+```
+
+
+Filter by those genes that are available in both
+
+```{r significant_overlaps_deletion}
+filtered_genes <- genesGR18[count_height>0 & count_scz.all>0]
+
+count_sig_scz <- countOverlaps(filtered_genes, gall.scz)
+count_height.sig <- countOverlaps(filtered_genes, gheight_cnv[gheight_cnv$p_height<0.01])
+tb <- table(height_sig = count_height.sig>0, scz_all_sig = count_sig_scz>0)
+tb
+
+chisq.test(tb)
+```
+
+
+So there apppears to be a tendency for genes that have CNVs that are associated with one to be the same as CNVs that are 
+associated with the other, but it may be that I need a more sophisticated way of doing the 
+significance testing, since it may just be that these are the genes where it is possible to 
+get significant results for both.
+
+
+We could do the same thing with SNPs. 
+
+

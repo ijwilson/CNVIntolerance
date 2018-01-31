@@ -5,6 +5,19 @@ source(here("R","prepare.R"))
 ## https://bioconductor.org/packages/release/data/annotation/html/SNPlocs.Hsapiens.dbSNP144.GRCh37.html
 ## load height GWAS summary statistics
 
+# 2012-2015 Data File Description:
+#   Each file consists of the following information for each SNP and its association to the specified trait based on meta-analysis in the respective publication. Significant digits for the p values, betas and standard errors are limited to two digits to further limit the possibility of identifiability.
+# 
+# MarkerName: The dbSNP name of the genetic marker
+# Allele1: The first allele (hg19 + strand). Where the regression coefficients (betas) are provided, the first allele is the effect allele. Where betas are not provided (typically the 2010 data), the first allele is the trait-increasing allele.
+# Allele2: The second allele (hg19 + strand)
+# Freq.Allele1.HapMapCEU: The allele frequency of Allele1 in the HapMap CEU population
+# b: beta
+# SE: standard error
+# p: p-value after meta-analysis using regression coefficients (beta and standard error), and after correction for inflation of test statistics using genomic control both at the individual study level and again after meta-analysis
+# N: Number of observations
+
+
 if (!dir.exists(here("output"))) {
   dir.create(here("output"))
 }
@@ -47,7 +60,7 @@ if (file.exists(here("output", "GWAS_height_summary.rda"))) {
 #ggplot(GWAS_height_summary, aes(x=b)) + geom_density() + xlim(-0.05, 0.05)
 plot(density(GWAS_height_summary$b))
 
-lines(debninstall.load("qqman")
+install.load("qqman")
 manhattan(GWAS_height_summary, chr="seqnames", bp="pos", p="p", snp="MarkerName" )
 
 qq(GWAS_height_summary)
