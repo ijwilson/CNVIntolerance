@@ -6,7 +6,7 @@ source("helper_functions.R")
 ## read SCZ cnv results
 scz.del.gene <- read.table("C:\\Users\\nijw\\Dropbox/CNVIntolerance/pgc_cnv/PGC_41K_QC_del_minimum8cnv.gene.results", header=TRUE)
 head(scz.del.gene)
-colnames(scz.del)[1] <- "gene_symbol"  ## changing the column name to match exac.scores
+colnames(scz.del.gene)[1] <- "gene_symbol"  ## changing the column name to match exac.scores
 
 
 ## Read the non-gene centric results.
@@ -23,7 +23,7 @@ head(exac.scores)
 
 ## We can now merge the two data.tables
 
-merged.table <- merge(scz.del, exac.scores, by="gene_symbol")
+merged.table <- merge(scz.del.gene, exac.scores, by="gene_symbol")
 head(merged.table)
 
 nrow(scz.del)
@@ -36,7 +36,8 @@ plot(-log10(merged.table$dev_pval), merged.table$del.score)
 sig <- merged.table$dev_pval<0.05
 mean(merged.table$del.score[sig==TRUE])
 mean(merged.table$del.score[sig==FALSE])
-## No sign of any difference.  What happens if we just look at highly significant genes
+mean(merged.table$dup.score[sig==TRUE])
+mean(merged.table$dup.score[sig==FALSE])## No sign of any difference.  What happens if we just look at highly significant genes
 sig <- merged.table$dev_pval<1E-5
 mean(merged.table$del.score[sig==TRUE])
 mean(merged.table$del.score[sig==FALSE])
@@ -49,8 +50,8 @@ t.test(merged.table$del.sing.score[sig==TRUE],merged.table$del.sing.score[sig==F
 ## This is highly significant
 sig <- merged.table$dev_pval<0.05
 
-mean(merged.table$del.sing.score[sig==TRUE])
-mean(merged.table$del.sing.score[sig==FALSE])
+mean(merged.table$dup.sing.score[sig==TRUE])
+mean(merged.table$dup.sing.score[sig==FALSE])
 t.test(merged.table$del.sing.score[sig==TRUE],merged.table$del.sing.score[sig==FALSE] )
 
 plot(-log10(merged.table$dev_pval), merged.table$del.sing.score)

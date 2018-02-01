@@ -11,19 +11,20 @@ install.load.bioc("GenomicRanges")
 
 ## Read the non-gene centric results.
 if (FALSE) {
-scz.dup <- fread(dropbox("pgc_cnv/PGC_41K_QC_dup.cnv.results"))
-scz.del <- fread(dropbox("pgc_cnv/PGC_41K_QC_del.cnv.results"))
-
-gscz.dup <- GRanges(seqnames=scz.dup$CHR, IRanges(start=scz.dup$BP, width=1), 
-                    z=scz.dup$z, p=scz.dup$z_pval, f=scz.dup$NCNV/41321, 
-                    fcontrol =scz.dup$UNAFF/20227 , n=scz.dup$NCNV, fcase = scz.dup$AFF/21094)
-
-gscz.del <- GRanges(seqnames=scz.del$CHR, IRanges(start=scz.del$BP, width=1), z=scz.del$z, 
-                    p=scz.del$z_pval, f=scz.del$NCNV/41321, 
-                    fcontrol =scz.del$UNAFF/20227 , n=scz.del$NCNV, fcase = scz.del$AFF/21094)
-
-genome(gscz.del) <- "hg18"
-genome(gscz.dup) <- "hg18"
+  scz.dup <- fread(dropbox("pgc_cnv/PGC_41K_QC_dup.cnv.results"))
+  scz.del <- fread(dropbox("pgc_cnv/PGC_41K_QC_del.cnv.results"))
+  
+  gscz.dup <- GRanges(seqnames=scz.dup$CHR, IRanges(start=scz.dup$BP, width=1), 
+                      z=scz.dup$z, p=scz.dup$z_pval, f=scz.dup$NCNV/41321, 
+                      fcontrol =scz.dup$UNAFF/20227 , n=scz.dup$NCNV, fcase = scz.dup$AFF/21094)
+  
+  gscz.del <- GRanges(seqnames=scz.del$CHR, IRanges(start=scz.del$BP, width=1), z=scz.del$z, 
+                      p=scz.del$z_pval, f=scz.del$NCNV/41321, 
+                      fcontrol =scz.del$UNAFF/20227 , n=scz.del$NCNV, fcase = scz.del$AFF/21094)
+  
+  genome(gscz.del) <- "hg18"
+  genome(gscz.dup) <- "hg18"
+  rm(scz.dup, scz.del)
 }
 
 height_cnv <- fread(dropbox("height_CNV_association_41467_2017_556_MOESM2_ESM.csv"))
@@ -33,7 +34,8 @@ gheight_cnv <- GRanges(height_cnv$CHR, IRanges(height_cnv$BP, width=1),
                        p_bmi = height_cnv$`Pvalue BMI`, beta_bmi = height_cnv$`Beta BMI`, 
                        fdel=height_cnv$F_DEL, fdup = height_cnv$F_DUP)
 genome(gheight_cnv) <- "hg18"
-rm(scz.dup, scz.del, height_cnv)  ##keep the workspace tidy
+rm(height_cnv)  ##keep the workspace tidy
+load(file=here("output", "gall_scz.gz"))
 
 ```
 
@@ -44,28 +46,129 @@ the gene centric analysis.  I think that it is nesessary to match up the CNV pro
 
 
 ```{r}
-load(file=here("output", "gall_scz.gz"))
 
 nearest.scz <- nearest(gheight_cnv, gall.scz)    ## find the nearest duplication
 height_scz <- cbind(data.frame(gheight_cnv), data.frame(gall.scz[nearest.scz]) )
 ## Tidy the combined dataset
 height_scz <- height_scz[,-c(3,4,5,12,14,15,16)]
-height_scz.dup$strand <- NULL;height_scz.dup$strand <- NULL
 colnames(height_scz)[c(2,9)] <- c("start_h","start_s")
 height_scz$p_s <- height_scz$pdel
 height_scz$p_s[height_scz$pdup<height_scz$pdel] <- height_scz$pdup[height_scz$pdup<height_scz$pdel]
 height_scz$close <- abs(height_scz$start_h - height_scz$start_s)<100
+height_scz$distance <- cut(abs(height_scz$start_h-height_scz$start_s), breaks=c(0,1,10,100,10000,10000000), include.lowest = TRUE)
 height_scz <- height_scz[height_scz$close==TRUE,]
+
 ```
 
 ```{r prep_genes, echo=FALSE}
+gheight_scz <- GRanges(seqnames=height_scz$seqnames, IRanges(start=height_scz$start_h, width=1), 
+                       p_s=height_scz$p_s, p_h= height_scz$p_height, 
+                       beta_height=height_scz$beta_height, beta_bmi = height_scz$beta_bmi,
+                       z_dup = height_scz$zdup, z_del = height_scz$zdel,
+                       p_dup = height_scz$pdup, p_del = height_scz$pdel, genome="hg18")
+
 load(here("output", "genesGR.rda"))
 genome(genesGR18) <- "hg18"
+## I would have though that each one of these CNV position would lie within a gene but 
+## it turns out that some of them lie within multiple genes.  Ouch.  Choose the first gene
+## and then filter out those genes that have no overlaps
+f <- findOverlaps(gheight_scz, genesGR18)
+d <- duplicated(queryHits(f))
+f <- f[!d]
+## So which genes do we have.
+tb <- tabulate(subjectHits(f))
+targetGenes <- genesGR18[which(tb>0)]
+gheight_scz$gene[queryHits(f)] <- names(genesGR18)[subjectHits(f)]
+gheight_scz <- gheight_scz[!is.na(gheight_scz$gene)]
+s <- split(gheight_scz, gheight_scz$gene)
+
+z_dup <- sapply(s, function(x) mean(x$z_dup))
+m <- match(names(targetGenes),names(z_dup))
+targetGenes$zdup[m] <- z_dup
+z_del <- sapply(s, function(x) mean(x$z_del))
+targetGenes$zdel[m] <- z_del
+
+beta_height <- sapply(s, function(x) mean(x$beta_height))
+targetGenes$beta_height[m] <- beta_height
+
+beta_bmi <- sapply(s, function(x) mean(x$beta_bmi))
+targetGenes$beta_bmi[m] <- beta_bmi
+
 ```
+
+```{r}
+opar <- par(mfrow=c(2,2))
+
+hist(targetGenes$zdup)
+hist(targetGenes$zdel)
+hist(targetGenes$beta_height)
+hist(targetGenes$beta_bmi)
+par(opar)
+```
+
+```{r}
+
+
+count_over_genes <- countOverlaps(genesGR18, gheight_scz)
+targetGenes <- genesGR18[count_over_genes>0]
+
+splitByOverlap(genesGR18, gheight_scz)
+
+
+
+count_over_cnv <- countOverlaps(gheight_scz, targetGenes)
+gheight_scz <- gheight_scz[count_over_cnv>0]
+f <- findOverlaps(gheight_scz, targetGenes)
+gheight_scz$gene[queryHits(f)] <- names(targetGenes)[subjectHits(f)]
+
+## let's just look at the first gene that
+## for each gene we want to get an average of the effect for both height and scz 
+## and add this 
+targetGenes$z_dup <- 0
+
+```
+
+
+
 ```{r count_overlaps_raw}
-count_scz <- countOverlaps(genesGR18, height_scz[gscz.del$n>0])
-count_height <- countOverlaps(genesGR18, gheight_cnv)
-table(height=count_height>0, scz_del=count_scz.del>0 )
+count_over <- countOverlaps(genesGR18, gheight_scz)
+targetGenes <- genesGR18[count_over>0]
+count_over <- countOverlaps(targetGenes, gheight_scz)
+count_h <- countOverlaps(targetGenes, gheight_scz[gheight_scz$p_h<0.001])
+count_s <- countOverlaps(targetGenes, gheight_scz[gheight_scz$p_s<0.001])
+
+f_h <- count_h/count_over
+f_s <- count_s/count_over
+tb <- table('height sig'=f_h>0.5, 'SCZ sig'=f_s>0.5)
+chisq.test(tb)
+```
+
+```{r count_overlaps_ra2w}
+
+count_h <- countOverlaps(targetGenes, gheight_scz[gheight_scz$p_h<0.001])
+count_s <- countOverlaps(targetGenes, gheight_scz[gheight_scz$p_del<0.001])
+
+f_h <- count_h/count_over
+f_s <- count_s/count_over
+tb <- table('height sig'=f_h>0.5, 'SCZ del sig'=f_s>0.5)
+tb
+chisq.test(tb)
+print(targetGenes[f_h>0.5&f_s>0.5])
+
+```
+
+```{r count_overlaps_raw}
+
+count_h <- countOverlaps(targetGenes, gheight_scz[gheight_scz$p_h<0.001])
+count_s <- countOverlaps(targetGenes, gheight_scz[gheight_scz$p_dup<0.001])
+
+f_h <- count_h/count_over
+f_s <- count_s/count_over
+tb <- table('height sig'=f_h>0.5, 'SCZ dup sig'=f_s>0.5)
+tb
+chisq.test(tb)
+print(targetGenes[f_h>0.5&f_s>0.5])
+
 ```
 
 
