@@ -5,6 +5,8 @@ source("helper_functions.R")
 
 ## read SCZ cnv results
 scz.del.gene <- read.table("C:\\Users\\nijw\\Dropbox/CNVIntolerance/pgc_cnv/PGC_41K_QC_del_minimum8cnv.gene.results", header=TRUE)
+scz.del.gene <- read.table(dropbox("pgc_cnv/PGC_41K_QC_del_minimum8cnv.gene.results"), header=TRUE)
+
 head(scz.del.gene)
 colnames(scz.del.gene)[1] <- "gene_symbol"  ## changing the column name to match exac.scores
 
