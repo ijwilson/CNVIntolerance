@@ -15,3 +15,9 @@ Further ideas
 
 Look for SNPs in the promoter regions of genes that are significant
 in the CNV GWAS.
+
+```
+promoters(mygenes, upstream=2000)
+```
+
+Should enable me to get the promoters.
