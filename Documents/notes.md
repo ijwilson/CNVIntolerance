@@ -9,3 +9,9 @@ might be useful.  This is available from teh EBI and for other databases such as
     
 
 * 
+
+Further ideas
+==============
+
+Look for SNPs in the promoter regions of genes that are significant
+in the CNV GWAS.
