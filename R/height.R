@@ -37,12 +37,8 @@ opar <- par(mfrow=c(4,1), mar=c(3,3,2,1))
 height$P <- height$pvalue_BMI
 manhattan(height, main="BMI")
 
-
-
 height$P <- height$`Pvalue Weight`
 manhattan(height, main="Weight")
-
-
 height$P <- height$`Pvalue Height`
 manhattan(height, main="Height")
 
