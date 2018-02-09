@@ -5,7 +5,7 @@ install.load("data.table")
 install.load.bioc("GenomicRanges")
 
 
-load(here("output", "height_cnv19.rda"))
+load(here("Examples", "height_cnv19.rda"))
 
 height_cnv19 <- height_cnv19[,c(1,2,4,5,8:15)]
 colnames(height_cnv19)[3:4] <- c("fdel", "fdup")
