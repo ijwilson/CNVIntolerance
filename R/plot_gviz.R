@@ -1,19 +1,22 @@
 #` # Plots using Gviz
-#`  [Vignette](http://www.bioconductor.org/packages/release/bioc/vignettes/ggbio/inst/doc/ggbio.pdf)
+#`  [Vignette](https://bioconductor.org/packages/release/bioc/vignettes/Gviz/inst/doc/Gviz.pdf)
 #`
 #` [Talk](https://jmonlong.github.io/MonBUG17_Gviz/#1)
 #`
+#' annother alternative is karyotpeR https://bernatgel.github.io/karyoploter_tutorial/
 
 #` ## Data
 #` I want the SCZ CNV data by Gene and the overall 
 #+ message=FALSE
+
 library(here)
 source(here("R", "prepare.R"))
 install.load.bioc("GenomicRanges", "Gviz") 
 
 chr <- "chr22"
 
-b22q11.2 <- GRanges("chr22", IRanges(18660553,21455556))
+b22q11.2 <- GRanges("chr22", IRanges(18660553,21455556)) +1000000
+
 genome(b22q11.2) <- "hg19"
 
 gen <- "hg19"
@@ -28,50 +31,103 @@ g <- keepSeqlevels(genesGR19, paste(1:22), pruning.mode = "coarse")
 ## then change the names
 seqlevels(g) <- paste("chr", seqlevels(g),sep="")
 genes.b22q11.2 <- subsetByOverlaps(g, b22q11.2)  
-grtrack <- GeneRegionTrack(geneModels, genome = gen, chromosome = chr, name = "Gene Model")
+#grtrack <- GeneRegionTrack(geneModels, genome = gen, chromosome = chr, name = "Gene Model")
 ## Get the CNVs for this region
-atrack <- AnnotationTrack(genes.b22q11.2, name = "genes", id=names(genes.b22q11.2))
+atrack <- AnnotationTrack(genes.b22q11.2, name = "genes")#, featureAnnotation="id")
 load(here("output", "remapped_cnv.rda"))
 
 gheight_cnv <- GRanges(paste("chr",height_cnv19$CHR,sep=""), IRanges(height_cnv19$BP, width=1), 
                        p_height = height_cnv19$`Pvalue Height`, beta_height= height_cnv19$`Beta Height`, 
                        p_bmi = height_cnv19$`Pvalue BMI`, beta_bmi = height_cnv19$`Beta BMI`, 
-                       fdel=height_cnv19$F_DEL, fdup = height_cnv19$F_DUP)
+                       fdel=height_cnv19$F_DEL/100, fdup = height_cnv19$F_DUP/100)
+
 genome(gheight_cnv) <- "hg19"
 
 gheight_cnv <- subsetByOverlaps(gheight_cnv, b22q11.2)
-dtrack_height <- DataTrack(data = gheight_cnv$beta_height, start = start(gheight_cnv),
-                        end = end(gheight_cnv), chromosome = chr, genome = gen,
-                        name = "beta_height")
+
+gheight_cnv1 <- gheight_cnv[gheight_cnv$p_height<0.001]
+gheight_cnv2 <- gheight_cnv[gheight_cnv$p_height>=0.001]
+
+#dtrack_height <- DataTrack(data = gheight_cnv$beta_height, start = start(gheight_cnv),
+#                        end = end(gheight_cnv), chromosome = chr, genome = gen,
+#                        name = "beta_height")
+
+dtrack_height1 <- DataTrack(data = gheight_cnv1$beta_height, start = start(gheight_cnv1),
+                           end = end(gheight_cnv1), chromosome = chr, genome = gen,
+                           name = "beta_height")
+
+dtrack_height2 <- DataTrack(data = gheight_cnv2$beta_height, start = start(gheight_cnv2),
+                           end = end(gheight_cnv2), chromosome = chr, genome = gen,
+                           name = "beta_height", col="grey")
+
+
+dtrack_height <- OverlayTrack(trackList = list(dtrack_height1, dtrack_height2))
+
 
 
 gSCZ_del_cnv <- GRanges(paste("chr",scz.del19$CHR,sep=""), IRanges(scz.del19$BP, width=1), 
                        p = scz.del19$cmh_pval, or= scz.del19$cmh_OR, 
-                       unaff=scz.del19$UNAFF, aff = scz.del19$AFF)
+                       f=scz.del19$UNAFF/20227, aff = scz.del19$AFF)
 
 
 gSCZ_dup_cnv <- GRanges(paste("chr",scz.dup19$CHR,sep=""), IRanges(scz.dup19$BP, width=1), 
                         p = scz.dup19$cmh_pval, or= scz.dup19$cmh_OR, 
-                        unaff=scz.dup19$UNAFF, aff = scz.dup19$AFF)
+                        f=scz.dup19$UNAFF/20227, aff = scz.dup19$AFF)
 
 gSCZ_del_cnv <- subsetByOverlaps(gSCZ_del_cnv, b22q11.2)
 gSCZ_dup_cnv <- subsetByOverlaps(gSCZ_dup_cnv, b22q11.2)
 
-dtrack_scz_del <- DataTrack(data = gSCZ_del_cnv$or, start = start(gSCZ_del_cnv),
-                           end = end(gSCZ_del_cnv), chromosome = chr, genome = gen,
-                           name = "OR Del", col="red")
+gSCZ_del_cnv1 <- gSCZ_del_cnv[gSCZ_del_cnv$p<0.001]
+gSCZ_del_cnv2 <- gSCZ_del_cnv[gSCZ_del_cnv$p>=0.001]
 
-dtrack_scz_dup <- DataTrack(data = gSCZ_dup_cnv$or, start = start(gSCZ_dup_cnv),
-                            end = end(gSCZ_dup_cnv), chromosome = chr, genome = gen,
+dtrack_scz_del1 <- DataTrack(data = gSCZ_del_cnv1$or, start = start(gSCZ_del_cnv1),
+                           end = end(gSCZ_del_cnv1), chromosome = chr, genome = gen,
+                           name = "OR Del", col="red")
+dtrack_scz_del2 <- DataTrack(data = gSCZ_del_cnv2$or, start = start(gSCZ_del_cnv2),
+                             end = end(gSCZ_del_cnv2), chromosome = chr, genome = gen,
+                             name = "OR Del", col="red", col="grey")
+
+dtrack_scz_del <- OverlayTrack(trackList = list(dtrack_scz_del1, dtrack_scz_del2))
+
+
+gSCZ_dup_cnv1 <- gSCZ_del_cnv[gSCZ_dup_cnv$p<0.001]
+gSCZ_dup_cnv2 <- gSCZ_dup_cnv[gSCZ_dup_cnv$p>=0.001]
+
+#dtrack_scz_dup <- DataTrack(data = gSCZ_dup_cnv$or, start = start(gSCZ_dup_cnv),
+#                             end = end(gSCZ_dup_cnv), chromosome = chr, genome = gen,
+#                             name = "OR Dup", col="green")
+
+
+dtrack_scz_dup1 <- DataTrack(data = gSCZ_dup_cnv1$or, start = start(gSCZ_dup_cnv1),
+                            end = end(gSCZ_dup_cnv1), chromosome = chr, genome = gen,
                             name = "OR Dup", col="green")
+
+dtrack_scz_dup2 <- DataTrack(data = gSCZ_dup_cnv2$or, start = start(gSCZ_dup_cnv2),
+                            end = end(gSCZ_dup_cnv2), chromosome = chr, genome = gen,
+                            name = "OR Dup", col="grey")
+
+#dtrack_scz_dup <- OverlayTrack(trackList = list(dtrack_scz_dup1, dtrack_scz_dup2))
 
 
 dtrack_fdup <- DataTrack(data = gheight_cnv$fdup, start = start(gheight_cnv),
                             end = end(gheight_cnv), chromosome = chr, genome = gen,
-                            name = "Deletion Frequency", col="blue")
+                            name = "Deletion Frequency", col="blue", lty=2, type="a")
 
 dtrack_fdel <- DataTrack(data = gheight_cnv$fdel, start = start(gheight_cnv),
                          end = end(gheight_cnv), chromosome = chr, genome = gen,
-                         name = "Deletion Frequency", col="red")
+                         name = "Deletion Frequency", col="red", lty=2, type="a")
 
-plotTracks(list( itrack, gtrack, dtrack_height, dtrack_scz_dup, dtrack_scz_del, atrack, dtrack_fdup, dtrack_fdel))
+dtrack_fdel_scz <- DataTrack(data = gSCZ_del_cnv$f, start = start(gSCZ_del_cnv),
+                         end = end(gSCZ_del_cnv), chromosome = chr, genome = gen,
+                         name = "Deletion Frequency", col="red", type="a")
+
+dtrack_fdup_scz <- DataTrack(data = gSCZ_dup_cnv$f, start = start(gSCZ_dup_cnv),
+                         end = end(gSCZ_dup_cnv), chromosome = chr, genome = gen,
+                         name = "Duplication Frequency", col="blue", type="a")
+
+ot <- OverlayTrack(trackList = list(dtrack_fdup, dtrack_fdel, dtrack_fdel_scz, dtrack_fdup_scz))
+#ot2 <- OverlayTrack(trackList = list(dtrack_fdel_scz, dtrack_fdup_scz))
+
+
+plotTracks(list( itrack, gtrack, dtrack_height, dtrack_scz_dup, dtrack_scz_del, atrack, ot))
+
