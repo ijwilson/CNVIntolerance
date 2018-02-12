@@ -4,7 +4,7 @@ source(here("R","prepare.R"))
 install.load("data.table")
 #
 height <- fread(dropbox("height_CNV_association_41467_2017_556_MOESM2_ESM.csv"))
-height_hg19 <- fread(dropbox("cnv_hg19.bed"))
+height_hg19 <- fread(dropbox("height_cnv_hg19.bed"))
 height_hg19[,V3:=NULL]
 colnames(height_hg19) <- c("CHR", "BP", "ID")
 height$ID <- paste("ID", height$CHR, height$BP, sep="_")

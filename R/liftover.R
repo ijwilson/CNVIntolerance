@@ -9,10 +9,9 @@ install.load.bioc("GenomicRanges") #, "rtracklayer")
 
 height <- fread(dropbox("height_CNV_association_41467_2017_556_MOESM2_ESM.csv"))   ## standard CNV
 height$ID <-  paste("ID", height$CHR, height$BP, sep="_")
+nrow(height)
 
-cnvdat <- height
-
-write.table(cbind(paste("chr",cnvdat$CHR,sep=""), cnvdat$BP, cnvdat$BP+1, cnvdat$ID),
+write.table(cbind(paste("chr", height$CHR, sep=""), height$BP, height$BP+1, height$ID),
             col.names = FALSE, row.names=FALSE, quote=FALSE, file=dropbox("height_cnv_hg18.bed") )
 
 ## liftOver cnv_hg18.bed hg18ToHg19.over.chain.gz cnv_hg19.bed unmapped
@@ -22,16 +21,13 @@ write.table(cbind(paste("chr",cnvdat$CHR,sep=""), cnvdat$BP, cnvdat$BP+1, cnvdat
 scz.dup <- fread(dropbox("pgc_cnv/PGC_41K_QC_dup.cnv.results"))
 scz.del <- fread(dropbox("pgc_cnv/PGC_41K_QC_del.cnv.results"))
 scz.dup$ID <-  paste("ID", scz.dup$CHR, scz.dup$BP, sep="_")
-scz.del$ID <-  paste("ID", scz.del$CHR, scz.dup$BP, sep="_")
+scz.del$ID <-  paste("ID", scz.del$CHR, scz.del$BP, sep="_")
 
-cnvdat <- scz.dup
 
-write.table(cbind(paste("chr",cnvdat$CHR,sep=""), cnvdat$BP, cnvdat$BP+1,cnvdat$ID),
+write.table(cbind(paste("chr",scz.dup$CHR,sep=""), scz.dup$BP, scz.dup$BP+1, scz.dup$ID),
             col.names = FALSE, row.names=FALSE, quote=FALSE, file=dropbox("scz.dup_cnv_hg18.bed") )
 
-cnvdat <- scz.del
-
-write.table(cbind(paste("chr",cnvdat$CHR,sep=""), cnvdat$BP, cnvdat$BP+1, cnvdat$ID),
+write.table(cbind(paste("chr",scz.del$CHR,sep=""), scz.del$BP, scz.del$BP+1, scz.del$ID),
             col.names = FALSE, row.names=FALSE, quote=FALSE, file=dropbox("scz.del_cnv_hg18.bed"))
 
 if (FALSE) {
@@ -49,14 +45,13 @@ colnames(height.remap) <- c("chr19", "start19", "end19", "ID")
 setkey(height.remap,  "ID")
 setkey(height, "ID")
 
-h <- height[height.remap]
-h$start18 <- h$BP
-h$BP <- h$start19
-h$chr19 <- NULL
-h$end19 <- NULL
-h$ID <- NULL
+height_cnv19 <- height[height.remap]
+height_cnv19$start18 <- height_cnv19$BP
+height_cnv19$BP <- height_cnv19$start19
+height_cnv19$chr19 <- NULL
+height_cnv19$end19 <- NULL
+height_cnv19$ID <- NULL
 
-height_cnv19 <- h 
 #=======================
 scz.dup.remap <- fread(dropbox("scz.dup_cnv_hg19.bed"))
 colnames(scz.dup.remap) <- c("chr19", "start19", "end19", "ID")
