@@ -16,17 +16,21 @@ chr <- "chr22"
 b22q11.2 <- GRanges("chr22", IRanges(18660553,21455556))
 genome(b22q11.2) <- "hg19"
 
-gen <- genome(b22q11.2)
+gen <- "hg19"
 gtrack <- GenomeAxisTrack()
 itrack <- IdeogramTrack(genome = gen, chromosome = chr)
 
 ## Get the gene models
 load(here("output", "genesGR.rda"))
-seqnames(genesGR19) <- paste("chr", seqnames(genesGR19), sep="")
-geneModel <- subsetByOverlaps(genesGR19, GRanges("22", IRanges(18660553,21455556)))  
+## alter sequence names
+## first drop the odd stuff
+g <- keepSeqlevels(genesGR19, paste(1:22), pruning.mode = "coarse")
+## then change the names
+seqlevels(g) <- paste("chr", seqlevels(g),sep="")
+genes.b22q11.2 <- subsetByOverlaps(g, b22q11.2)  
 grtrack <- GeneRegionTrack(geneModels, genome = gen, chromosome = chr, name = "Gene Model")
 ## Get the CNVs for this region
-
+atrack <- AnnotationTrack(genes.b22q11.2, name = "genes", id=names(genes.b22q11.2))
 load(here("output", "remapped_cnv.rda"))
 
 gheight_cnv <- GRanges(paste("chr",height_cnv19$CHR,sep=""), IRanges(height_cnv19$BP, width=1), 
@@ -62,4 +66,12 @@ dtrack_scz_dup <- DataTrack(data = gSCZ_dup_cnv$or, start = start(gSCZ_dup_cnv),
                             name = "OR Dup", col="green")
 
 
-plotTracks(list( itrack, gtrack, dtrack_height, dtrack_scz_dup, dtrack_scz_del))
+dtrack_fdup <- DataTrack(data = gheight_cnv$fdup, start = start(gheight_cnv),
+                            end = end(gheight_cnv), chromosome = chr, genome = gen,
+                            name = "Deletion Frequency", col="blue")
+
+dtrack_fdel <- DataTrack(data = gheight_cnv$fdel, start = start(gheight_cnv),
+                         end = end(gheight_cnv), chromosome = chr, genome = gen,
+                         name = "Deletion Frequency", col="red")
+
+plotTracks(list( itrack, gtrack, dtrack_height, dtrack_scz_dup, dtrack_scz_del, atrack, dtrack_fdup, dtrack_fdel))
