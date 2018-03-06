@@ -1,0 +1,65 @@
+Copy Number Variants and Intolerance in Height, BMI and Schizophrenia
+========================================================
+author: Ian Wilson
+date: 15 March 2018
+autosize: true
+
+
+```{r prepare, echo=FALSE}
+library(here)
+```
+
+
+Genome Wide Height and BMI
+========================================================
+
+![Bmi](height_bmi_cnv_manhattan.png)
+
+
+
+Genome Wide Schizophrenia from PGC  
+========================================================
+![SCZ](SCZ_cnv_manhattan.png)
+
+
+Height SNP GWAS
+================
+
+![Bmi](height_GWAS_manhattan.png)
+
+
+SCZ SNP GWAS
+============
+
+![Bmi](scz_GWAS_manhattan.png)
+
+
+
+Questions
+=========
+
+* Are the variants in CNVs and SNPs in the same genes?
+* What are the limits to CNV variation?
+* Is there a systematic difference between CNVs associated with Height and schizophrenia?
+
+
+Helpful Data
+=============
+
+* ExAc
+    * Has derived gene centric intolerance scores for CNVs (completely untested)
+    * Based on all variants and those found singly
+
+* GWAS Catalog
+
+* More GWAS summary data
+
+
+
+
+
+Presentation
+========================================================
+
+For more details on authoring R presentations please visit <https://support.rstudio.com/hc/en-us/articles/200486468>.
+

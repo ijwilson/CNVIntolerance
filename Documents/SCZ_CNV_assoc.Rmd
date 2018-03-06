@@ -1,0 +1,92 @@
+---
+title: "Height CNV Association Study"
+author: "Ian Wilson"
+date: "15 December 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(here)
+source(here("R","prepare.R"))
+install.load(c("data.table", "qqman"))
+```
+
+We have downloaded a file with the CNV association results with height from the paper by  Mace *et al.*.   [CNV-association meta-analysis in 191,161 European adults reveals new loci associated with anthropometric traits](https://www.nature.com/articles/s41467-017-00556-x#MOESM2).
+
+## Height
+
+```{r read_scz, cache=TRUE, echo=FALSE}
+
+install.load("pander", "ggplot2", "data.table", "gridExtra", "reshape2")#, "gatepoints")
+install.load.bioc("GenomicRanges") 
+
+## Read the non-gene centric results.
+scz.dup <- fread(dropbox("pgc_cnv/PGC_41K_QC_dup.cnv.results"))
+scz.del <- fread(dropbox("pgc_cnv/PGC_41K_QC_del.cnv.results"))
+
+
+opar <- par(mfrow=c(2,1), mar=c(3,3,2,1))
+
+scz.dup$P <- scz.dup$z_pval
+manhattan(scz.dup, main="SCZ Duplications")
+
+scz.del$P <- scz.del$z_pval
+manhattan(scz.del, main="SCZ Deletions")
+
+par(opar)
+
+
+
+
+gscz.dup <- GRanges(seqnames=scz.dup$CHR, IRanges(start=scz.dup$BP, width=1), 
+                    z=scz.dup$z, p=scz.dup$z_pval, f=scz.dup$NCNV/41321, 
+                    fcontrol =scz.dup$UNAFF/20227 , n=scz.dup$NCNV, fcase = scz.dup$AFF/21094)
+
+gscz.del <- GRanges(seqnames=scz.del$CHR, IRanges(start=scz.del$BP, width=1), z=scz.del$z, 
+                    p=scz.del$z_pval, f=scz.del$NCNV/41321, 
+                    fcontrol =scz.del$UNAFF/20227 , n=scz.del$NCNV, fcase = scz.del$AFF/21094)head(height)
+height[,SNP := paste("cnv",1:nrow(height),sep="")]
+```
+
+
+Investigate the qq plots.
+
+```{r manhattan, cache=TRUE, echo=FALSE}
+## Simple of Manhattan plot of BMI
+##plot(-log10(height$`Pvalue BMI`), col=height$CHR%%2+1)
+## Simple plot of Height
+##plot(-log10(height$pvalue_BMI), col=height$CHR%%2+1, main="Height")
+##qq(height$pvalue_BMI)
+##acf(height$F_DUP)
+######################################################
+
+opar <- par(mfrow=c(4,1), mar=c(3,3,2,1))
+
+height$P <- height$`Pvalue BMI`
+manhattan(height, main="BMI")
+
+height$P <- height$`Pvalue Weight`
+manhattan(height, main="Weight")
+
+height$P <- height$`Pvalue Height`
+manhattan(height, main="Height")
+
+height$P <- height$`Pvalue Waist-Hip ratio`
+manhattan(height, main="Waist-Hip Ratio")
+par(opar)
+```
+
+These don't look great.
+
+
+```{r quantile_plots, cache=TRUE}
+opar <- par(mfrow=c(2,2), mar=c(3,3,2,1))
+qq(height$`Pvalue BMI`, main="BMI")
+qq(height$`Pvalue Weight`, main="Weight")
+qq(height$`Pvalue Height`, main="Height")
+qq(height$`Pvalue Waist-Hip ratio`, main="Waist Hip Ratio")
+par(opar)
+```
+
+These markers should be a good place to start in looking for associations between CNV variants and the SNP directory.
