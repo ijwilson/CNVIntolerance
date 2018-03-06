@@ -1,0 +1,128 @@
+---
+title: "Copy Number Variants and Intolerance in Height, BMI and Schizophrenia"
+author: "Ian Wilson"
+date: "6 March 2018"
+output:
+  beamer_presentation:
+    fig_width: 7
+    fig_height: 6
+    fig_caption: false
+classoption: "aspectratio=169"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+
+
+
+Genome Wide Height and BMI
+========================================================
+
+
+```{r prepare, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+library(here)
+```
+
+![Manhattan Plot of CNV Assications with Height and BMI](height_bmi_cnv_manhattan.png)
+
+
+
+Genome Wide Schizophrenia from PGC  
+========================================================
+![SCZ](SCZ_cnv_manhattan.png)
+
+
+Height SNP GWAS
+================
+
+![Bmi](height_GWAS_manhattan.png)
+
+
+SCZ SNP GWAS
+============
+
+![Bmi](scz_GWAS_manhattan.png)
+
+
+Questions
+=========
+
+* Are the variants in CNVs and SNPs in the same genes?
+* What are the limits to CNV variation?
+* Is there a systematic difference between CNVs associated with Height and schizophrenia?
+
+
+Helpful Data
+=============
+
+* ExAc
+    * Has derived gene centric intolerance scores for CNVs (completely untested)
+    * Based on all variants and those found singly
+
+* GWAS Catalog
+
+* More GWAS summary data
+
+### Additonal Question:
+    
+Are the CNV intolerance scores from ExaC useful?
+
+A Paper
+=======
+
+The genetic overlap between schizophrenia and height
+
+Schizophr Res. 2013 Dec; 151(0): 226–228.
+
+Epidemiological studies suggest that height and schizophrenia risk are inversely correlated. These findings might arise because i) height and schizophrenia share genetic variants and ii) the effects of these shared variants are in opposite direction for the two traits. We use genome wide association data to empirically evaluate these hypotheses. We find that variants which impact on height and risk for schizophrenia \textcolor{blue}{are distributed across several genomic regions and the directions of effect vary, some consistent and others inconsistent with the direction expected from the phenotypic data}. Moreover, signals that were in and not in accord with the phenotypic data aggregated in distinct biological pathways.
+
+Keywords:  \textcolor{red}{Suggestive Signals}, \textcolor{red}{Shrinkage}
+
+
+A Paper
+=======
+
+The genetic overlap between schizophrenia and height
+
+Schizophr Res. 2013 Dec; 151(0): 226–228.
+
+Epidemiological studies suggest that height and schizophrenia risk are inversely correlated. These findings might arise because i) height and schizophrenia share genetic variants and ii) the effects of these shared variants are in opposite direction for the two traits. We use genome wide association data to empirically evaluate these hypotheses. We find that variants which impact on height and risk for schizophrenia are distributed across several genomic regions and the directions of effect vary, some consistent and others inconsistent with the direction expected from the phenotypic data. Moreover, \textcolor{teal}{signals that were in and not in accord with the phenotypic data aggregated in distinct biological pathways.}
+
+Keywords:  \textcolor{red}{Suggestive Signals}, \textcolor{red}{Shrinkage}
+
+Presentation
+========================================================
+
+For more details on authoring R presentations please visit <https://support.rstudio.com/hc/en-us/articles/200486468>.
+
+
+
+
+
+## R Markdown
+
+This is an R Markdown presentation. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
+
+## Slide with Bullets
+
+- Bullet 1
+- Bullet 2
+- Bullet 3
+
+## Slide with R Output
+
+```{r cars, echo = TRUE}
+summary(cars)
+```
+
+## Slide with Plot
+
+```{r pressure}
+plot(pressure)
+```
+

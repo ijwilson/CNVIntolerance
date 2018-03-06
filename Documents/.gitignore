@@ -2,3 +2,8 @@
 *.docx
 height_CNV_assoc_cache
 height_CNV_assoc_files
+scz_height_cnv_cache
+scz_height_cnv_files
+*.png
+*.pdf
+SGIM_ijw-cache

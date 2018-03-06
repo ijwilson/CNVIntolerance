@@ -5,3 +5,5 @@
 output
 data
 *.html
+Rplot*
+Examples/*.rda
