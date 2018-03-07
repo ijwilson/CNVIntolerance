@@ -93,6 +93,7 @@ Epidemiological studies suggest that height and schizophrenia risk are inversely
 
 Keywords:  \textcolor{red}{Suggestive Signals}, \textcolor{red}{Shrinkage}
 
+<<<<<<< HEAD
 
 Pathway Analysis
 =================
@@ -101,6 +102,8 @@ Pathway Analysis
 
 
 
+=======
+>>>>>>> 28179afbf3bdf9272cb6a8ef80aa826dbfbd622f
 Presentation
 ========================================================
 
