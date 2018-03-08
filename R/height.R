@@ -6,7 +6,6 @@ install.load.bioc("GenomicRanges", "rtracklayer")
 
 height <- fread(dropbox("height_CNV_association_41467_2017_556_MOESM2_ESM.csv"))   ## standard CNV
 
-
 write.table(cbind(paste("chr",height$CHR,sep=""), height$BP, height$BP+1, paste("ID", height$CHR, height$BP, sep="_")),
             col.names = FALSE, row.names=FALSE, quote=FALSE, file=dropbox("cnv_hg18.bed"))
 
