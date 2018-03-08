@@ -9,9 +9,9 @@
 
 all: alldata 
 #docs figs
-alldata:  output/genesGR.rda 
+alldata:  output/genesGR.rda  output/height_cnv.rda output/scz_cnv.rda
 
-#output/snpinfo.rda output/exacscores.rda output/dbCNV.rda output/genesGR.rda \
+#output/snpinfo.rda output/exacscores.rda output/dbCNV.rda  \
           output/exacbed.rda output/ignore.regions.rda output/individuals.rda output/rare.rda output/relationships.rda
 
 docs: alldata Reports/associated_cnvs.html Reports/check_individuals.html \
@@ -28,7 +28,8 @@ output/genesGR.rda: R/getGenes.R
 output/height_cnv.rda: R/height.R
 	R CMD BATCH R/height.R
 
-
+output/scz_cnv.rda: R/cnv_scz.R
+	R CMD BATCH R/cnv_scz.R
 
 output/exacbed.rda:  R/exacbed.R output/genesGR.rda 
 	R CMD BATCH R/exacbed.R

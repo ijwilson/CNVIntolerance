@@ -15,7 +15,7 @@ if (!dir.exists(here("output")))
 save(gscz, file=here("output", "scz_cnv.rda"))
 
 
-
+if (FALSE) {
 install.load("qqman")
 
 ######################################################
@@ -48,13 +48,14 @@ manhattan(scz, main="CNV SCZ risk - exact test")
 
 par(opar)
 qq(scz$exact_pval)
-
+}
 
 ### Intolerance
 
 ## look up the gene cnv tests
-
-scz_gene <- fread(dropbox("pgc_cnv/PGC_41K_QC_all_minimum12cnv.gene.results"))
+if (FALSE) {
+  
+  scz_gene <- fread(dropbox("pgc_cnv/PGC_41K_QC_all_minimum12cnv.gene.results"))
 colnames(scz_gene)[1] <- "gene_symbol"
 
 cnv_intolerance <- read.table(here("data", "Intolerance", "exac-final-cnv.gene.scores071316"), header=TRUE)
@@ -80,3 +81,4 @@ a <- merge(scz_del, cnv_intolerance, by="gene_symbol")
 cor(cbind(a$AFF, a$UNAFF, a$glm_beta, a$glm_pval, a$dev_estimate, a$del.score, a$dup.score, a$cnv.score))
 
 
+}

@@ -31,24 +31,27 @@ install.load("qqman")
 ##acf(height$F_DUP)
 ######################################################
 
-opar <- par(mfrow=c(4,1), mar=c(3,3,2,1))
+if (FALSE) {
+  opar <- par(mfrow=c(4,1), mar=c(3,3,2,1))
+  
+  height$P <- height$pvalue_BMI
+  manhattan(height, main="BMI")
+  
+  height$P <- height$`Pvalue Weight`
+  manhattan(height, main="Weight")
+  height$P <- height$`Pvalue Height`
+  manhattan(height, main="Height")
+  
+  height$P <- height$`Pvalue Waist-Hip ratio`
+  manhattan(height, main="Waist-Hip Ratio")
+  par(opar)
+  
+  opar <- par(mfrow=c(2,2), mar=c(3,3,2,1))
+  qq(height$pvalue_BMI, main="BMI")
+  qq(height$`Pvalue Weight`, main="Weight")
+  qq(height$`Pvalue Height`, main="Height")
+  qq(height$`Pvalue Waist-Hip ratio`, main="Waist Hip Ratio")
+  
+  par(opar)
 
-height$P <- height$pvalue_BMI
-manhattan(height, main="BMI")
-
-height$P <- height$`Pvalue Weight`
-manhattan(height, main="Weight")
-height$P <- height$`Pvalue Height`
-manhattan(height, main="Height")
-
-height$P <- height$`Pvalue Waist-Hip ratio`
-manhattan(height, main="Waist-Hip Ratio")
-par(opar)
-
-opar <- par(mfrow=c(2,2), mar=c(3,3,2,1))
-qq(height$pvalue_BMI, main="BMI")
-qq(height$`Pvalue Weight`, main="Weight")
-qq(height$`Pvalue Height`, main="Height")
-qq(height$`Pvalue Waist-Hip ratio`, main="Waist Hip Ratio")
-
-par(opar)
+}
