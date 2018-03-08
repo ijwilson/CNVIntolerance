@@ -24,6 +24,7 @@ Genome Wide Height and BMI
 
 ```{r prepare, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
 library(here)
+source(here("R","prepare.R"))
 ```
 
 ![Manhattan Plot of CNV Assications with Height and BMI](height_bmi_cnv_manhattan.png)
@@ -93,17 +94,17 @@ Epidemiological studies suggest that height and schizophrenia risk are inversely
 
 Keywords:  \textcolor{red}{Suggestive Signals}, \textcolor{red}{Shrinkage}
 
-<<<<<<< HEAD
 
 Pathway Analysis
 =================
 
+```{r}
+install.load.bioc("VariantAnnotation")
+```
 
 
 
 
-=======
->>>>>>> 28179afbf3bdf9272cb6a8ef80aa826dbfbd622f
 Presentation
 ========================================================
 
