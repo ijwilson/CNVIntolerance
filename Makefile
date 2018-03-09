@@ -43,8 +43,8 @@ output/GWAS_scz_summary.rda: R/GWAS_scz_summary.R
 
 
 output/hg18ToHg19.over.chain.gz:
-	cd output
 	wget http://hgdownload.soe.ucsc.edu/goldenPath/hg18/liftOver/hg18ToHg19.over.chain.gz
+	mv -f hg18ToHg19.over.chain.gz output
 
 output/scz.all_cnv_hg18.gene.bed: R/prepare_liftover.R
 	R CMD BATCH R/prepare_liftover.R
