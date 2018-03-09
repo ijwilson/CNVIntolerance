@@ -40,7 +40,7 @@ output/GWAS_height_summary.rda: R/GWAS_height_summary.R
 	
 output/GWAS_scz_summary.rda: R/GWAS_scz_summary.R
 	R CMD BATCH R/GWAS_scz_summary.R
-	
+
 
 output/scz.all_cnv_hg19.gene.bed: output/scz.all_cnv_hg18.gene.bed R/prepare_liftover.R
 	R CMD BATCH R/prepare_liftover.R
