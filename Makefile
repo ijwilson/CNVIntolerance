@@ -9,7 +9,11 @@
 
 all: alldata 
 #docs figs
-alldata:  output/genesGR.rda  output/height_cnv.rda output/scz_cnv.rda
+alldata:  output/genesGR.rda  output/height_cnv.rda output/scz_cnv.rda output/GWAS_height_summary.rda \
+          output/GWAS_scz_summary.rda 
+  
+## liftover will only work on linux machines        
+liftover: output/remapped_cnv2.rda
 
 #output/snpinfo.rda output/exacscores.rda output/dbCNV.rda  \
           output/exacbed.rda output/ignore.regions.rda output/individuals.rda output/rare.rda output/relationships.rda
@@ -30,7 +34,26 @@ output/height_cnv.rda: R/height.R
 
 output/scz_cnv.rda: R/cnv_scz.R
 	R CMD BATCH R/cnv_scz.R
+	
+output/GWAS_height_summary.rda: R/GWAS_height_summary.R
+	R CMD BATCH R/GWAS_height_summary.R
+	
+output/GWAS_scz_summary.rda: R/GWAS_scz_summary.R
+	R CMD BATCH R/GWAS_scz_summary.R
+	
 
+output/scz.all_cnv_hg19.gene.bed: output/scz.all_cnv_hg18.gene.bed R/prepare_liftover.R
+	R CMD BATCH R/prepare_liftover.R
+	liftOver output/height_cnv_hg18.bed hg18ToHg19.over.chain.gz output/height_cnv_hg19.bed output/unmapped_height
+	liftOver output/scz.dup_cnv_hg18.bed hg18ToHg19.over.chain.gz output/scz.dup_cnv_hg19.bed output/unmapped_scz.dup
+	liftOver output/scz.del_cnv_hg18.bed hg18ToHg19.over.chain.gz output/scz.del_cnv_hg19.bed output/unmapped_scz.del
+	liftOver output/scz.all_cnv_hg18.gene.bed hg18ToHg19.over.chain.gz output/scz.all_cnv_hg19.gene.bed output/unmapped_scz_all.dup
+	liftOver output/scz.del_cnv_hg18.gene.bed hg18ToHg19.over.chain.gz output/scz.del_cnv_hg19.gene.bed output/unmapped_scz_del.dup
+
+output/remapped_cnv2.rda: R/liftover.R output/scz.all_cnv_hg19.gene.bed 
+	R CMD BATCH R/liftover.R
+
+	
 output/exacbed.rda:  R/exacbed.R output/genesGR.rda 
 	R CMD BATCH R/exacbed.R
 
@@ -61,6 +84,8 @@ Figs/fig1.pdf: Figs/fig1.R output/rare.rda output/individuals.rda output/exacbed
 	R CMD BATCH Figs/fig1.R	
 
 ## Documents
+
+
 
 Reports/check_individuals.html: Reports/check_individuals.Rmd R/start.R
 	Rscript -e 'library(rmarkdown); library(here); render(here("Reports","check_individuals.Rmd"), output_format="html_document")'
