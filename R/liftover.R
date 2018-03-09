@@ -9,47 +9,19 @@ install.load.bioc("GenomicRanges") #, "rtracklayer")
 
 height <- fread(dropbox("height_CNV_association_41467_2017_556_MOESM2_ESM.csv"))   ## standard CNV
 height$ID <-  paste("ID", height$CHR, height$BP, sep="_")
-nrow(height)
-
-write.table(cbind(paste("chr", height$CHR, sep=""), height$BP, height$BP+1, height$ID),
-            col.names = FALSE, row.names=FALSE, quote=FALSE, file=dropbox("height_cnv_hg18.bed") )
-
-## liftOver cnv_hg18.bed hg18ToHg19.over.chain.gz cnv_hg19.bed unmapped
 
 ## Read the non-gene centric results.
-
 scz.dup <- fread(dropbox("pgc_cnv/PGC_41K_QC_dup.cnv.results"))
 scz.del <- fread(dropbox("pgc_cnv/PGC_41K_QC_del.cnv.results"))
 scz.dup$ID <-  paste("ID", scz.dup$CHR, scz.dup$BP, sep="_")
 scz.del$ID <-  paste("ID", scz.del$CHR, scz.del$BP, sep="_")
 
-
-write.table(cbind(paste("chr",scz.dup$CHR,sep=""), scz.dup$BP, scz.dup$BP+1, scz.dup$ID),
-            col.names = FALSE, row.names=FALSE, quote=FALSE, file=dropbox("scz.dup_cnv_hg18.bed") )
-
-write.table(cbind(paste("chr",scz.del$CHR,sep=""), scz.del$BP, scz.del$BP+1, scz.del$ID),
-            col.names = FALSE, row.names=FALSE, quote=FALSE, file=dropbox("scz.del_cnv_hg18.bed"))
-
 ###############################################################
 ## Gene centric scz analysis
-
-
 scz.del.gene <- fread(dropbox("pgc_cnv/PGC_41K_QC_del_minimum8cnv.gene.results"))
 scz.del.gene <- scz.del.gene[!is.na(scz.del.gene$BP_start_hg18),]
 scz.all.gene <- fread(dropbox("pgc_cnv/PGC_41K_QC_all_minimum12cnv.gene.results"))
 scz.all.gene <- scz.all.gene[!is.na(scz.all.gene$BP_start_hg18),]
-
-
-write.table(cbind(paste("chr",scz.all.gene$CHR, sep=""), scz.all.gene$BP_start_hg18, scz.all.gene$BP_start_hg18+1, scz.all.gene$Gene_symbol),
-            col.names = FALSE, row.names=FALSE, quote=FALSE, file=dropbox("scz.all_cnv_hg18.gene.bed") )
-
-write.table(cbind(paste("chr",scz.del.gene$CHR, sep=""), scz.del.gene$BP, scz.del.gene$BP+1, scz.del.gene$Gene_symbol),
-            col.names = FALSE, row.names=FALSE, quote=FALSE, file=dropbox("scz.del_cnv_hg18.gene.bed"))
-
-
-
-
-
 
 if (FALSE) {
 command <- "
@@ -89,12 +61,10 @@ scz.dup19$chr19 <- NULL
 scz.dup19$end19 <- NULL
 scz.dup19$ID <- NULL
 #=======================
-
 scz.del.remap <- fread(dropbox("scz.del_cnv_hg19.bed"))
 colnames(scz.del.remap) <- c("chr19", "start19", "end19", "ID")
 setkey(scz.del.remap,  "ID")
 setkey(scz.del, "ID")
-
 scz.del19 <- scz.del[scz.del.remap]
 scz.del19$start18 <- scz.del19$BP
 scz.del19$BP <- scz.del19$start19
@@ -102,20 +72,16 @@ scz.del19$chr19 <- NULL
 scz.del19$end19 <- NULL
 scz.del19$ID <- NULL
 #========================================
-
 scz.del.gene.remap <- fread(dropbox("scz.del_cnv_hg19.gene.bed"))
 colnames(scz.del.gene.remap) <- c("chr19", "start19", "end19", "Gene_symbol")
 setkey(scz.del.gene.remap,  "Gene_symbol")
 setkey(scz.del.gene, "Gene_symbol")
-
 scz.del.gene19 <- scz.del.gene[scz.del.gene.remap]
 #========================================
 scz.all.gene.remap <- fread(dropbox("scz.all_cnv_hg19.gene.bed"))
 colnames(scz.all.gene.remap) <- c("chr19", "start19", "end19", "Gene_symbol")
 setkey(scz.all.gene.remap,  "Gene_symbol")
 setkey(scz.all.gene, "Gene_symbol")
-
 scz.all.gene19 <- scz.all.gene[scz.all.gene.remap]
-
-
+#========================================
 save(scz.del19, scz.dup19, height_cnv19, scz.all.gene19, scz.del.gene19, file=here("output", "remapped_cnv2.rda"))

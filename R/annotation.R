@@ -33,6 +33,7 @@ head(seqlevels(txdb_hg19))
 sig_height <- gheight[gheight$p<0.001]
 sig_scz <- gscz[gscz$p<0.001]
   
+
 loc_height_hg19 <- locateVariants(sig_height, txdb_hg19, AllVariants())
 loc_scz_hg19    <- locateVariants(sig_scz, txdb_hg19, AllVariants())
 
@@ -45,6 +46,43 @@ or <- data.frame(or = sig_scz[loc_scz_hg19$QUERYID]$or, geneid = loc_scz_hg19$GE
 
 gupheight <- b$geneid[b$b>0.0]
 gdownheight <- b$geneid[b$b<0.0]
+
+
+
+
+install.load.bioc("GO.db", "org.Hs.eg.db")
+x <- org.Hs.egGO
+mapped_genes <- mappedkeys(x)
+
+#table(unique(gdownheight) %in% mapped_genes)
+#table(unique(gupheight) %in% mapped_genes)
+
+ugupheight <- unique(gupheight)
+ugupheight <- ugupheight[!is.na(ugupheight)]
+ugupheight <- ugupheight[ugupheight %in% mapped_genes]
+xx <- as.list(x[ugupheight])
+if(length(xx) > 0) {
+  # Try the first one
+  got <- xx[[1]]
+  got[[1]][["GOID"]]
+  got[[1]][["Ontology"]]
+  got[[1]][["Evidence"]]
+}
+
+
+mapped_genes <- mappedkeys(unique(gupheight))
+
+
+
+
+install.load.bioc("ReactomePA")
+
+if (FALSE) {
+  library(ReactomePA)
+  data(geneList)
+  de <- names(geneList)[abs(geneList) > 1.5]
+  head(de)
+}
 
 gupscz <- or$geneid[or$or<1]
 gdownscz <- or$geneid[or$or>1]
