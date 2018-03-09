@@ -39,7 +39,7 @@ output/GWAS_height_summary.rda: R/GWAS_height_summary.R
 	R CMD BATCH R/GWAS_height_summary.R
 	
 output/GWAS_scz_summary.rda: R/GWAS_scz_summary.R
-	R CMD BATCH R/GWAS_scz_summary.R
+	R CMD BATCH R/GWAS_scz_summary.R 
 
 
 data/hg18ToHg19.over.chain.gz:
