@@ -40,10 +40,11 @@ output/GWAS_height_summary.rda: R/GWAS_height_summary.R
 	
 output/GWAS_scz_summary.rda: R/GWAS_scz_summary.R
 	R CMD BATCH R/GWAS_scz_summary.R
-	
+
+output/scz.all_cnv_hg18.gene.bed: R/prepare_liftover.R
+	R CMD BATCH R/prepare_liftover.R
 
 output/scz.all_cnv_hg19.gene.bed: output/scz.all_cnv_hg18.gene.bed R/prepare_liftover.R
-	R CMD BATCH R/prepare_liftover.R
 	liftOver output/height_cnv_hg18.bed hg18ToHg19.over.chain.gz output/height_cnv_hg19.bed output/unmapped_height
 	liftOver output/scz.dup_cnv_hg18.bed hg18ToHg19.over.chain.gz output/scz.dup_cnv_hg19.bed output/unmapped_scz.dup
 	liftOver output/scz.del_cnv_hg18.bed hg18ToHg19.over.chain.gz output/scz.del_cnv_hg19.bed output/unmapped_scz.del
