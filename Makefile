@@ -13,7 +13,7 @@ alldata:  output/genesGR.rda  output/height_cnv.rda output/scz_cnv.rda output/GW
           output/GWAS_scz_summary.rda 
   
 ## liftover will only work on linux machines        
-liftover: output/remapped_cnv2.rda data/hg18ToHg19.over.chain.gz
+liftover: output/remapped_cnv2.rda output/hg18ToHg19.over.chain.gz
 
 #output/snpinfo.rda output/exacscores.rda output/dbCNV.rda  \
           output/exacbed.rda output/ignore.regions.rda output/individuals.rda output/rare.rda output/relationships.rda
@@ -42,19 +42,19 @@ output/GWAS_scz_summary.rda: R/GWAS_scz_summary.R
 	R CMD BATCH R/GWAS_scz_summary.R 
 
 
-data/hg18ToHg19.over.chain.gz:
-	cd data
+output/hg18ToHg19.over.chain.gz:
+	cd output
 	wget http://hgdownload.soe.ucsc.edu/goldenPath/hg18/liftOver/hg18ToHg19.over.chain.gz
 
 output/scz.all_cnv_hg18.gene.bed: R/prepare_liftover.R
 	R CMD BATCH R/prepare_liftover.R
 
 output/scz.all_cnv_hg19.gene.bed: output/scz.all_cnv_hg18.gene.bed R/prepare_liftover.R data/hg18ToHg19.over.chain.gz
-	liftOver output/height_cnv_hg18.bed data/hg18ToHg19.over.chain.gz output/height_cnv_hg19.bed output/unmapped_height
-	liftOver output/scz.dup_cnv_hg18.bed data/hg18ToHg19.over.chain.gz output/scz.dup_cnv_hg19.bed output/unmapped_scz.dup
-	liftOver output/scz.del_cnv_hg18.bed data/hg18ToHg19.over.chain.gz output/scz.del_cnv_hg19.bed output/unmapped_scz.del
-	liftOver output/scz.all_cnv_hg18.gene.bed data/hg18ToHg19.over.chain.gz output/scz.all_cnv_hg19.gene.bed output/unmapped_scz_all.dup
-	liftOver output/scz.del_cnv_hg18.gene.bed data/hg18ToHg19.over.chain.gz output/scz.del_cnv_hg19.gene.bed output/unmapped_scz_del.dup
+	liftOver output/height_cnv_hg18.bed output/hg18ToHg19.over.chain.gz output/height_cnv_hg19.bed output/unmapped_height
+	liftOver output/scz.dup_cnv_hg18.bed output/hg18ToHg19.over.chain.gz output/scz.dup_cnv_hg19.bed output/unmapped_scz.dup
+	liftOver output/scz.del_cnv_hg18.bed output/hg18ToHg19.over.chain.gz output/scz.del_cnv_hg19.bed output/unmapped_scz.del
+	liftOver output/scz.all_cnv_hg18.gene.bed output/hg18ToHg19.over.chain.gz output/scz.all_cnv_hg19.gene.bed output/unmapped_scz_all.dup
+	liftOver output/scz.del_cnv_hg18.gene.bed output/hg18ToHg19.over.chain.gz output/scz.del_cnv_hg19.gene.bed output/unmapped_scz_del.dup
 
 output/remapped_cnv2.rda: R/liftover.R output/scz.all_cnv_hg19.gene.bed 
 	R CMD BATCH R/liftover.R
