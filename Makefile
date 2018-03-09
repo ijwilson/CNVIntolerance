@@ -7,7 +7,7 @@
 %.pdf: %.R
 		R CMD BATCH $<
 
-all: alldata 
+all: alldata output/scz.all_cnv_hg18.gene.bed
 #docs figs
 alldata:  output/genesGR.rda  output/height_cnv.rda output/scz_cnv.rda output/GWAS_height_summary.rda \
           output/GWAS_scz_summary.rda 

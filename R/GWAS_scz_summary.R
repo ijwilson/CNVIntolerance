@@ -23,9 +23,7 @@ if (!dir.exists(here("output"))) {
   dir.create(here("output"))
 }
 
-if (file.exists(here("output", "GWAS_scz_summary.rda"))) {
-  load(here("output", "GWAS_scz_summary.rda"))
-} else {
+
 
   GWAS_scz_summary <- read.table(
     dropbox("scz2/ckqny.scz2snpres.gz"), 
@@ -41,7 +39,7 @@ if (file.exists(here("output", "GWAS_scz_summary.rda"))) {
   GWAS_scz_summary$chr <- as.numeric(GWAS_scz_summary$chr)
   GWAS_scz_summary$hg19chrc <- NULL
   save(GWAS_scz_summary, file=here("output", "GWAS_scz_summary.rda"))
-}
+
 
 if (FALSE) {   ## takes too long
   plot(density(GWAS_scz_summary$or))

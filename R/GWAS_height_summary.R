@@ -22,9 +22,7 @@ if (!dir.exists(here("output"))) {
   dir.create(here("output"))
 }
 
-if (file.exists(here("output", "GWAS_height_summary.rda"))) {
-  load(here("output", "GWAS_height_summary.rda"))
-} else {
+
 
   GWAS_height_summary <- read.table(
     dropbox("GIANT_HEIGHT_Wood_et_al_2014_publicrelease_HapMapCeuFreq.txt.gz"), 
@@ -54,7 +52,7 @@ if (file.exists(here("output", "GWAS_height_summary.rda"))) {
   GWAS_height_summary$seqnames <- as.numeric(GWAS_height_summary$seqnames)
 
   save(GWAS_height_summary, file=here("output", "GWAS_height_summary.rda"))
-}
+
 if (FALSE) {
   #install.load("ggplot2")
   #ggplot(GWAS_height_summary, aes(x=b)) + geom_density() + xlim(-0.05, 0.05)

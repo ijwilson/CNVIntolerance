@@ -12,7 +12,7 @@ height$ID <-  paste("ID", height$CHR, height$BP, sep="_")
 nrow(height)
 
 write.table(cbind(paste("chr", height$CHR, sep=""), height$BP, height$BP+1, height$ID),
-            col.names = FALSE, row.names=FALSE, quote=FALSE, file==here("output", "height_cnv_hg18.bed") )
+            col.names = FALSE, row.names=FALSE, quote=FALSE, file=here("output", "height_cnv_hg18.bed") )
 
 ## liftOver cnv_hg18.bed hg18ToHg19.over.chain.gz cnv_hg19.bed unmapped
 
