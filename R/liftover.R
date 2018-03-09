@@ -59,7 +59,6 @@ command <- "
 
   liftOver scz.all_cnv_hg18.gene.bed hg18ToHg19.over.chain.gz scz.all_cnv_hg19.gene.bed unmapped_scz_all.dup
   liftOver scz.del_cnv_hg18.gene.bed hg18ToHg19.over.chain.gz scz.del_cnv_hg19.gene.bed unmapped_scz_del.dup
-
 "
 }
 

@@ -55,14 +55,14 @@ if (file.exists(here("output", "GWAS_height_summary.rda"))) {
 
   save(GWAS_height_summary, file=here("output", "GWAS_height_summary.rda"))
 }
-
-#install.load("ggplot2")
-#ggplot(GWAS_height_summary, aes(x=b)) + geom_density() + xlim(-0.05, 0.05)
-plot(density(GWAS_height_summary$b))
-
-install.load("qqman")
-manhattan(GWAS_height_summary, chr="seqnames", bp="pos", p="p", snp="MarkerName" )
-
-qq(GWAS_height_summary)
-
+if (FALSE) {
+  #install.load("ggplot2")
+  #ggplot(GWAS_height_summary, aes(x=b)) + geom_density() + xlim(-0.05, 0.05)
+  plot(density(GWAS_height_summary$b))
+  
+  install.load("qqman")
+  manhattan(GWAS_height_summary, chr="seqnames", bp="pos", p="p", snp="MarkerName" )
+  
+  qq(GWAS_height_summary)
+}
 

@@ -53,7 +53,6 @@ if (FALSE) {   ## takes too long
   dev.off()
   
   qq(GWAS_scz_summary)
-  
 }
 
 
