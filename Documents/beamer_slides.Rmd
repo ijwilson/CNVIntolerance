@@ -1,5 +1,5 @@
 ---
-title: "Copy Number Variants and Intolerance in Height, BMI and Schizophrenia"
+title: "Copy Number Variation and Muation Intolerance in Height, BMI and Schizophrenia"
 author: "Ian Wilson"
 date: "6 March 2018"
 output:
