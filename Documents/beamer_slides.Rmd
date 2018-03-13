@@ -59,15 +59,15 @@ Questions
 Helpful Data
 =============
 
-* ExAc
+* ExAC
     * Has derived gene centric intolerance scores for CNVs (completely untested)
-    * Based on all variants and those found singly
+    * These scores are based on residuals after fitting a linear model for the expected number of CNVs in a gene 
 
 * GWAS Catalog
 
 * More GWAS summary data
 
-### Additonal Question:
+### Additional Question
     
 Are the CNV intolerance scores from ExaC useful?
 
@@ -101,6 +101,10 @@ Pathway Analysis
 ```{r}
 install.load.bioc("VariantAnnotation")
 ```
+
+
+
+
 
 
 

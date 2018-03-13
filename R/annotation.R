@@ -24,6 +24,12 @@ if (!file.exists( here("output", "gwas_gr.rda"))) {
 }
 
 
+## First thing to do is to match the SNP signals for the two datasets
+
+
+
+
+
 #OK then , want to set this up to look for coding variants, promoter variants and intronic variants 
 #and then compre things.  Buit we could start with variants of estimated large effect
 
