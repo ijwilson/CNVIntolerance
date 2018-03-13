@@ -1,9 +1,10 @@
 
 library(here)
 source(here("R","prepare.R"))
-install.load.bioc("VariantAnnotation", "AnnotationHub", "TxDb.Hsapiens.UCSC.hg19.knownGene", "data.table")
-load(here("output", "snp_match.rda"))
+install.load.bioc("VariantAnnotation", "AnnotationHub", "TxDb.Hsapiens.UCSC.hg19.knownGene" ,"clusterProfiler")
 
+load(here("output", "snp_match.rda"))
+install.load("data.table")
 gboth <- GRanges(seqnames=Rle(snp_both$chrom), IRanges(start=snp_both$pos, width=1, names=snp_both$snpid)
                    , p.height = snp_both$p.height, b=snp_both$b, f=snp_both$freq
                    , p.scz = snp_both$p.scz, or=snp_both$or )
@@ -25,21 +26,82 @@ loc_both_hg19 <- locateVariants(gboth, txdb_hg19, AllVariants())
 table(loc_both_hg19$LOCATION)
 
 #loc_both_hg19 <- loc_height_hg19
-all <- data.table(data.frame(gboth[loc_both_hg19$QUERYID], GENEID= loc_both_hg19$GENEID, LOCATION=loc_both_hg19$LOCATION, TXID = loc_both_hg19$TXID))
+all <- data.table(data.frame(gboth[loc_both_hg19$QUERYID], GENEID= loc_both_hg19$GENEID, LOCATION=loc_both_hg19$LOCATION, TXID = loc_both_hg19$TXID, stringsAsFactors = FALSE))
 
-allg <- all[ LOCATIOn!="intergenic"]
-allc <- all[all$LOCATIOn=="coding"]
-alli <- all[LOCATIOn=="intron"]
-allp <- all[LOCATIOn=="promoter"]
+all <- all[!is.na(f)]
+ch <- all$f > 0.5
+all$f2 <- all$f
+all$f2[ch] <- 1.0-all$f[ch]
+all$b[ch] <- -all$b[ch]
 
+
+
+allg <- all[LOCATION!="intergenic"]
+allc <- all[LOCATION=="coding"]
+alli <- all[LOCATION=="intron"]
+allp <- all[LOCATION=="promoter"]
+
+
+plot(allg$f2[allg$p.height<0.001], allg$b[allg$p.height<0.001], col=factor(allg$LOCATION[allg$p.height<0.001]))
+
+
+rm(gboth)
+gc()
 
 install.load.bioc("ReactomePA")
+##########################################
 
-genes_height <- unique(allc$GENEID[allc$p.height<1E-3])
-height_coding <- enrichPathway(gene=genes_height, pvalueCutoff=0.05, readable=T)
-  head(as.data.frame(height_coding))
-  barplot(height_coding, showCategory=12)
-  genes_height_promoters <- unique(allp$GENEID[allp$p.height<1E-3])
+get_genes <- function(xx, minpheight, minpscz, minb=-1E10, maxb=1E10, minor=0, maxor=1E9,minf2=0, maxf2=1) {
+  unique(xx$GENEID[xx$p.height<=minpheight & xx$p.scz <= minpscz &
+                              xx$b >= minb & xx$b <= maxb & xx$or >= minor & xx$or <= maxor & xx$f2 >= minf2 & xx$f2 <= maxf2])
+}
+get_path <- function(xx, minpheight=0.01, minpscz=1) {
+  genes <- unique(xx$GENEID[xx$p.height<=minpheight & xx$p.scz <= minpscz])
+  print(paste("Using" , length(genes), "genes"))
+  enrichPathway(gene=genes, pvalueCutoff=0.05, readable=T)
+}
+##########################################
+all_height_genes <- get_genes(allg, 0.001, 1)
+all_height_path <- enrichPathway(gene=all_height_genes, pvalueCutoff=0.05, readable=T)
+all_height_path
+dotplot(all_height_path, showCat=15)
+all_height_increase <- get_genes(allg, 0.001, 1, 0.04, 1E10, maxf2 = 0.05)
+all_height_increase_path <- enrichPathway(gene=all_height_increase, pvalueCutoff=0.05, readable=T)
+dotplot(all_height_increase_path, showCat=15)
+all_height_decrease <- get_genes(allg, 0.001, 1, -10, -0.04, maxf2 = 0.05)
+all_height_decrease_path <- enrichPathway(gene=all_height_decrease, pvalueCutoff=0.05, readable=T)
+dotplot(all_height_decrease_path, showCat=15)
+
+res_h <- compareCluster(list(increase=all_height_increase, decrease=all_height_decrease), fun="enrichPathway")
+plot(res_h)
+##########################################
+## Going to do something a bit different
+## Look at genes with a higher count of significant results
+tb <- table(allg$GENEID[allp$p.height<0.001], cut(allg$b[allp$p.height<0.001], c(-10,-0.02,0.02,10)))
+
+plot(tb[,1], tb[,3])
+abline(0,1)
+height_genes <- names(tb[tb>20])
+
+
+tb <- table(allg$GENEID[allp$p.scz<0.001], cut(allg$or[allp$p.scz<0.001], c(0,0.97,0.99,1.01,1.03,100)))
+
+allg <- allg[!is.na(f)]
+ch <- allg$f > 0.5
+allg$f2 <- allg$f
+allg$f2[ch] <- 1.0-allg$f[ch]
+allg$b[ch] <- -allg$b[ch]
+
+
+plot(allg$f2[allg$p.height<0.001], allg$b[allg$p.height<0.001])
+
+##########################################
+coding_height <- get_path(allc, 0.001, 1)
+dotplot(coding_height)
+
+promoters_height <-  get_path(allp, 0.001, 1)
+dotplot(promoters_height)
+genes_height_promoters <- unique(allp$GENEID[allp$p.height<1E-3])
   
   height_promoters <- enrichPathway(gene=genes_height_promoters, pvalueCutoff=0.05, readable=T)
   head(as.data.frame(height_promoters))
@@ -56,18 +118,9 @@ height_coding <- enrichPathway(gene=genes_height, pvalueCutoff=0.05, readable=T)
   head(as.data.frame(scz_coding))
   barplot(scz_coding, showCategory=12)
   
-get_path <- function(xx, minpheight=0.01, minpscz=1) {
-  genes <- unique(xx$GENEID[xx$p.height<=minpheight & xx$p.scz <= minpscz])
-  print(paste("Using" , length(genes), "genes"))
-  enrichPathway(gene=genes, pvalueCutoff=0.05, readable=T)
-}
 
 
-get_genes <- function(xx, minpheight, minpscz, minb=-1E10, maxb=1E10, minor=0, maxor=1E9) {
-  genes <- unique(xx$GENEID[xx$p.height<=minpheight & xx$p.scz <= minpscz &
-                              xx$b >= minb & xx$b <= maxb & xx$or >= minor & xx$or <= maxor])
-genes
-}
+
   
 height_coding <- get_path(allc, 1E-3, 1)
 barplot(height_coding)
@@ -97,7 +150,7 @@ enrichMap(scz_promoters, layout=igraph::layout.kamada.kawai, vertex.label.cex = 
   cnetplot(yup, categorySize="pvalue", foldChange=geneList, fixed=TRUE)
   
   
-install.load.bioc("clusterProfiler")
+#install.load.bioc("clusterProfiler")
   
 ## compare scz
 
