@@ -14,6 +14,8 @@ classoption: "aspectratio=169"
 knitr::opts_chunk$set(echo = FALSE)
 library(here)
 source(here("R","prepare.R"))
+install.load("data.table", "pander")
+
 ```
 
 
@@ -48,8 +50,16 @@ SCZ SNP GWAS
 ============
 
 ![Bmi](scz_GWAS_manhattan.png)
+
+GWAS Associations
+===================
+![assoc](GWAS_latest.png)
+
+
+
 CNV Datasets
 ============
+
 
 
 
@@ -140,9 +150,13 @@ Repeat Overlap with two Different Studies
 =================
 
 ```{r, echo=FALSE, cache=TRUE}
-load( here("output", "snp_match.rda"))
-install.load("data.table", "pander")
-m <- table(SCZ = snp_both$p.scz<0.0005, Height = snp_both$p.height<0.0005)
+load( here("output", "both_with_GENEID.rda"))
+allg <- all[LOCATION!="intergenic"]
+allc <- all[LOCATION=="coding"]
+alli <- all[LOCATION=="intron"]
+allp <- all[LOCATION=="promoter"]
+
+m <- table(SCZ = all$p.scz<0.0005, Height = all$p.height<0.0005)
 class(m) <- "matrix"
 dm <- data.frame(m)
 colnames(m) <- c("Height Significant", "Height NS")
@@ -153,24 +167,83 @@ pander(m)
 
 There is a strong association between positive signals.
 
+Using Shrunk Z-Scores
+==============
 
 
-```{r FIQT}
-FIQT <- function(z=z, min.p=10^-300){
-    pvals<-2*pnorm(abs(z), low=F)
-    pvals[pvals<min.p]<- min.p
-    adj.pvals<-p.adjust(pvals,method="fdr")
-    mu.z<-sign(z)*qnorm(adj.pvals/2,low=F)
-    mu.z[abs(z)>qnorm(min.p/2,low=F)]<-z[abs(z)>qnorm(min.p/2,low=F)]
-    mu.z
-}
-snp_both$z.scz <- log(snp_both$or)/snp_both$or.se
-snp_both$z.height <- snp_both$b/snp_both$b.se
+```{r}
 
-snp_both$zb.scz <- FIQT(snp_both$z.scz)
+m <- table( SCZ = ((all$z.scz< -3) | (all$z.scz > 3)), Height = ((all$z.height< -3)|(all$z.height>3)))
+class(m) <- "matrix"
+dm <- data.frame(m)
+colnames(dm) <- c("Height Suggestive (|z| > 3)", "Height NS")
+rownames(dm) <- c("SCZ Suggestive (|z| > 3)", "SCZ NS")
+pander(dm, "Test for association, p<1e-16")
+
+```
+```{r}
+install.load("pander")
+allb <- all[((z.scz< -3) | (all$z.scz > 3)) & ((all$z.height< -3)|(all$z.height>3))]
+m <- table( SCZ = (allb$z.scz< -3) , Height = (allb$z.height< -3))
+class(m) <- "matrix"
+dm <- data.frame(m)
+colnames(dm) <- c("Height z > 3", "Height z < -3")
+rownames(dm) <- c("SCZ z > 3", "SCZ z < -3")
+pander(dm, caption=paste0("All gene associated \'suggestive\' SNPs. p=",signif(chisq.test(m)$p.value,2)))
+```
+
+Coding Or Intronic
+=======
+
+```{r}
+allb <- allc[((z.scz< -3) | (allc$z.scz > 3)) & ((allc$z.height< -3)|(allc$z.height>3))]
+m <- table( SCZ = (allb$z.scz< -3) , Height = (allb$z.height< -3))
+class(m) <- "matrix"
+dm <- data.frame(m)
+colnames(dm) <- c("Height z > 3", "Height z < -3")
+rownames(dm) <- c("SCZ z > 3", "SCZ z < -3")
+pander(dm, caption=paste0("Coding SNPs, p=" ,signif(fisher.test(m)$p.value,2)))
+
+allb <- alli[((z.scz< -3) | (z.scz > 3)) & ((z.height< -3)|(z.height>3))]
+m <- table( SCZ = (allb$z.scz< -3) , Height = (allb$z.height< -3))
+class(m) <- "matrix"
+dm <- data.frame(m)
+colnames(dm) <- c("Height z > 3", "Height z < -3")
+rownames(dm) <- c("SCZ z > 3", "SCZ z < -3")
+pander(dm, caption=paste0("Intronic SNPs, p=", signif(fisher.test(m)$p.value,2)))
 
 ```
 
+SNPs in 5' UTR, 3'UTR and Promoter Regions 
+========================
+```{r}
+allp2 <- all[LOCATION %in% c("fiveUTR", "threeUTR","promoter")]
+allb <- allp2[((z.scz< -3) | (z.scz > 3)) & ((z.height< -3)|(z.height>3))]
+m <- table( SCZ = (allb$z.scz< -3) , Height = (allb$z.height< -3))
+class(m) <- "matrix"
+dm <- data.frame(m)
+colnames(dm) <- c("Height z > 3", "Height z < -3")
+rownames(dm) <- c("SCZ z > 3", "SCZ z < -3")
+pander(dm, caption=paste0("Promoter SNPs, p=", round(chisq.test(m)$p.value,2)))
+```
+
+
+Pathways via ReactomePA R Library
+========
+
+
+![Bmi](SNP_pathways.png)
+
+
+CNV Analyses
+============
+
+![scz](SCZ_case_control.png)
+
+Height and SCZ Effect Sizes
+=============
+
+![scz_height](height_scz_cnv.png)
 
 
 
@@ -180,30 +253,4 @@ Presentation
 For more details on authoring R presentations please visit <https://support.rstudio.com/hc/en-us/articles/200486468>.
 
 
-
-
-
-## R Markdown
-
-This is an R Markdown presentation. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
-
-## Slide with Bullets
-
-- Bullet 1
-- Bullet 2
-- Bullet 3
-
-## Slide with R Output
-
-```{r cars, echo = TRUE}
-summary(cars)
-```
-
-## Slide with Plot
-
-```{r pressure}
-plot(pressure)
-```
 
