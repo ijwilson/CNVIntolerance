@@ -5,9 +5,28 @@ install.load.bioc("VariantAnnotation", "AnnotationHub", "TxDb.Hsapiens.UCSC.hg19
 
 load(here("output", "snp_match.rda"))
 install.load("data.table")
+FIQT <- function(z=z, min.p=10^-300){
+  pvals<-2*pnorm(abs(z), low=F)
+  pvals[pvals<min.p]<- min.p
+  adj.pvals<-p.adjust(pvals,method="fdr")
+  mu.z<-sign(z)*qnorm(adj.pvals/2,low=F)
+  mu.z[abs(z)>qnorm(min.p/2,low=F)]<-z[abs(z)>qnorm(min.p/2,low=F)]
+  mu.z
+}
+## Schould I change the discordance here?
+
+
+
+
+snp_both$z.scz <- log(snp_both$or)/snp_both$or.se
+snp_both$z.height <- snp_both$b/snp_both$b.se
+snp_both$zb.scz <- FIQT(snp_both$z.scz)
+snp_both$zb.height <- FIQT(snp_both$z.height)
+
+
 gboth <- GRanges(seqnames=Rle(snp_both$chrom), IRanges(start=snp_both$pos, width=1, names=snp_both$snpid)
                    , p.height = snp_both$p.height, b=snp_both$b, f=snp_both$freq
-                   , p.scz = snp_both$p.scz, or=snp_both$or )
+                   , p.scz = snp_both$p.scz, or=snp_both$or, z.scz = snp_both$zb.scz, z.height = snp_both$zb.height )
 
 rm(snp_both)
 #OK then , want to set this up to look for coding variants, promoter variants and intronic variants 
@@ -33,13 +52,15 @@ ch <- all$f > 0.5
 all$f2 <- all$f
 all$f2[ch] <- 1.0-all$f[ch]
 all$b[ch] <- -all$b[ch]
-
+all$or[ch] <- 1/all$b[ch]
 
 
 allg <- all[LOCATION!="intergenic"]
 allc <- all[LOCATION=="coding"]
 alli <- all[LOCATION=="intron"]
 allp <- all[LOCATION=="promoter"]
+
+
 
 
 plot(allg$f2[allg$p.height<0.001], allg$b[allg$p.height<0.001], col=factor(allg$LOCATION[allg$p.height<0.001]))
@@ -50,6 +71,35 @@ gc()
 
 install.load.bioc("ReactomePA")
 ##########################################
+
+paired_levels <- (gboth$z.scz< -3) + 2*(gboth$z.scz > 3) + 4*(gboth$z.height< -3) + 8*(gboth$z.height>3)
+fpaired_levels <- factor(paired_levels, levels=c(0,1,2,4,5,6,8,9,10), 
+                         labels=c("none", "scz_decrease", "scz_increase"
+                                  , "height_decrease", 
+                                  "scz_height_decrease", "scz_decrease_height_increase",
+                                  "height_increase",
+                                  "height_increase_scz_decrease", "height_scz_increase")
+                         )
+
+
+l <- list(
+  scz_down = unique(allg$GENEID[allg$z.scz< -3]),
+  scz_up = unique(allg$GENEID[allg$z.scz > 3]),
+  height_down = unique(allg$GENEID[allg$z.height< -3]),
+    height_up= unique(allg$GENEID[allg$z.height>3])
+)
+
+ld <- list(
+  h_up = unique(allg$GENEID[allg$z.scz< -3 & allg$z.height > 3]),
+  s_up = unique(allg$GENEID[allg$z.scz > 3 & allg$z.height < -3])
+)
+
+res <- compareCluster(l, fun="enrichPathway")
+plot(res)  
+
+res_discordant <- compareCluster(ld, fun="enrichPathway")
+plot(res_discordant) 
+
 
 get_genes <- function(xx, minpheight, minpscz, minb=-1E10, maxb=1E10, minor=0, maxor=1E9,minf2=0, maxf2=1) {
   unique(xx$GENEID[xx$p.height<=minpheight & xx$p.scz <= minpscz &

@@ -10,8 +10,10 @@ output:
 classoption: "aspectratio=169"
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, echo=FALSE, results='hide'}
 knitr::opts_chunk$set(echo = FALSE)
+library(here)
+source(here("R","prepare.R"))
 ```
 
 
@@ -27,11 +29,11 @@ library(here)
 source(here("R","prepare.R"))
 ```
 
-![Manhattan Plot of CNV Assications with Height and BMI](height_bmi_cnv_manhattan.png)
+![Manhattan Plot of CNV Assocations with Height and BMI](height_bmi_cnv_manhattan.png)
 
 
 
-Genome Wide Schizophrenia from PGC  
+Genome Wide Schizophrenia CNV Associations from PGC  
 ========================================================
 ![SCZ](SCZ_cnv_manhattan.png)
 
@@ -46,6 +48,46 @@ SCZ SNP GWAS
 ============
 
 ![Bmi](scz_GWAS_manhattan.png)
+CNV Datasets
+============
+
+
+
+
+Population Genetics
+===================
+
+The patterns and level of genetic variation in a population are 
+due to the interaction between 
+
+* mutation
+* drift
+* and selection
+
+With some population subdivision and assortative mating to add extra layers of associaton at a site,
+
+and recombination so that positions close on the genome tend to be alike.
+
+
+CNV Burden
+===================
+
+CHD, Autism, Schizophrenia, Tourette's Syndrome, Congenital Kidney Malformation show an increased number of CNVs in cases compared to controls
+
+The association tends to be stronger for CNVs that are 
+
+* de-novo
+* rarer
+* overlap genes
+* are deletions
+
+It was shown in in the height CNV GWAS that there was a 
+
+* $0.41$cm decrease in height 
+* $0.003$ increase in waist-hip ratio 
+* $0.14$ kg/m$^2$ increase in BMI
+
+with every Mb of total deletion burden.
 
 
 Questions
@@ -94,17 +136,40 @@ Epidemiological studies suggest that height and schizophrenia risk are inversely
 
 Keywords:  \textcolor{red}{Suggestive Signals}, \textcolor{red}{Shrinkage}
 
-
-Pathway Analysis
+Repeat Overlap with two Different Studies
 =================
 
-```{r}
-install.load.bioc("VariantAnnotation")
+```{r, echo=FALSE, cache=TRUE}
+load( here("output", "snp_match.rda"))
+install.load("data.table", "pander")
+m <- table(SCZ = snp_both$p.scz<0.0005, Height = snp_both$p.height<0.0005)
+class(m) <- "matrix"
+dm <- data.frame(m)
+colnames(m) <- c("Height Significant", "Height NS")
+rownames(m) <- c("SCZ significant", "SCZ NS")
+pander(m)
 ```
+"Suggestive" p-value used is $1 \times 10^{-5}$.
+
+There is a strong association between positive signals.
 
 
 
+```{r FIQT}
+FIQT <- function(z=z, min.p=10^-300){
+    pvals<-2*pnorm(abs(z), low=F)
+    pvals[pvals<min.p]<- min.p
+    adj.pvals<-p.adjust(pvals,method="fdr")
+    mu.z<-sign(z)*qnorm(adj.pvals/2,low=F)
+    mu.z[abs(z)>qnorm(min.p/2,low=F)]<-z[abs(z)>qnorm(min.p/2,low=F)]
+    mu.z
+}
+snp_both$z.scz <- log(snp_both$or)/snp_both$or.se
+snp_both$z.height <- snp_both$b/snp_both$b.se
 
+snp_both$zb.scz <- FIQT(snp_both$z.scz)
+
+```
 
 
 
