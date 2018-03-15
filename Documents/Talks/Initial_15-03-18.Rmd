@@ -178,6 +178,7 @@ Aside:  Shrinking Z-Scores
 ==================
 
 The smallest github code I have seen (comments are mine). 
+<https://github.com/bacanusa/FIQT>
 
 ```{r FIQT, echo=TRUE}
 FIQT <- function(z=z, min.p=10^-300){
