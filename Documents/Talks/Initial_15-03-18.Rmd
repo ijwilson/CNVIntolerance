@@ -274,7 +274,7 @@ Height and SCZ Effect Sizes
 
 
 
-ExAc Scores (Jordan White)
+ExAc Scores 
 ==========================
 
 Positive scores indicate genes that are more intolerant to mutations.
