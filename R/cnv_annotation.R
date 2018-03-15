@@ -6,7 +6,7 @@ library(here)
 source(here("R","prepare.R"))
 install.load("data.table")
 install.load.bioc("GenomicRanges")
-install.load.bioc("VariantAnnotation", "AnnotationHub", "TxDb.Hsapiens.UCSC.hg19.knownGene" ,"clusterProfiler", "")
+install.load.bioc("VariantAnnotation", "AnnotationHub", "TxDb.Hsapiens.UCSC.hg19.knownGene" ,"clusterProfiler")
 install.load.bioc("ReactomePA")
 
 hub <- AnnotationHub()
@@ -15,7 +15,6 @@ hub <- AnnotationHub()
 txdb_hg19 <- TxDb.Hsapiens.UCSC.hg19.knownGene
 
 
-load(here("output", "remapped_cnv2.rda"))
 ####
 FIQT <- function(z=z, min.p=10^-300){
   pvals<-2*pnorm(abs(z), low=F)
@@ -121,6 +120,59 @@ plot(res_h)
 ## Now I need to do something with matched CNVs to see if that is better
 ## Find the matched CNV dataset
 
+
+load(here("output", "gthree.loc.rda"))
+install.load("data.table")
+
+table(abs(gthree.loc$z_bmi)>3)
+table(abs(gthree.loc$z_height)>3)
+table(abs(gthree.loc$z_del)>3)
+table(abs(gthree.loc$z_dup)>3)
+
+gthree.loc$GENEID <- paste(gthree.loc$GENEID)
+
+l <- list(
+  bmi = unique(gthree.loc$GENEID[abs(gthree.loc$z_bmi)>2]),
+  height = unique(gthree.loc$GENEID[abs(gthree.loc$z_height)>2]),
+  scz.del = unique(gthree.loc$GENEID[abs(gthree.loc$z_del)>2]),
+  scz.dup = unique(gthree.loc$GENEID[abs(gthree.loc$z_dup)>2])
+  )
+##bext -1.5, 2.5
+sapply(gthree.loc[,6:9], function(x) table(x>2.5))
+sapply(gthree.loc[,6:9], function(x) table(x< -1.5))
+
+up_limit <- 2.5
+low_limit <- -1.2
+l <- list(
+  b_h_uu = unique(gthree.loc$GENEID[(gthree.loc$z_bmi>up_limit & gthree.loc$z_height>up_limit) 
+                                    | (gthree.loc$z_bmi<low_limit & gthree.loc$z_height<low_limit) ]),
+  b_h_ud = unique(gthree.loc$GENEID[(gthree.loc$z_bmi>up_limit & gthree.loc$z_height<low_limit) 
+                                    | (gthree.loc$z_bmi<low_limit & gthree.loc$z_height>up_limit) ]),
+  d_h_uu = unique(gthree.loc$GENEID[(gthree.loc$z_del>up_limit & gthree.loc$z_height>up_limit) 
+                                    | (gthree.loc$z_del<low_limit & gthree.loc$z_height<low_limit) ]),
+  d_h_ud = unique(gthree.loc$GENEID[(gthree.loc$z_del<low_limit & gthree.loc$z_height>up_limit) 
+                                    | (gthree.loc$z_del>up_limit & gthree.loc$z_height<low_limit) ]),
+  d_b_ud = unique(gthree.loc$GENEID[(gthree.loc$z_del<low_limit & gthree.loc$z_bmi>up_limit) 
+                                    | (gthree.loc$z_del>up_limit & gthree.loc$z_bmi<low_limit) ]),
+  d_b_uu = unique(gthree.loc$GENEID[(gthree.loc$z_del<low_limit & gthree.loc$z_bmi<low_limit) 
+                                    | (gthree.loc$z_del>up_limit & gthree.loc$z_bmi>up_limit) ]),
+  u_b_ud = unique(gthree.loc$GENEID[(gthree.loc$z_dup<low_limit & gthree.loc$z_bmi>up_limit) 
+                                    | (gthree.loc$z_dup>up_limit & gthree.loc$z_bmi<low_limit) ]),
+  u_b_uu = unique(gthree.loc$GENEID[(gthree.loc$z_dup<low_limit & gthree.loc$z_bmi<low_limit) 
+                                    | (gthree.loc$z_dup>up_limit & gthree.loc$z_bmi>up_limit) ]),
+  u_d_ud = unique(gthree.loc$GENEID[(gthree.loc$z_dup<low_limit & gthree.loc$z_del>up_limit) 
+                                    | (gthree.loc$z_dup>up_limit & gthree.loc$z_del<low_limit) ]),
+  u_d_uu = unique(gthree.loc$GENEID[(gthree.loc$z_dup<low_limit & gthree.loc$z_del<low_limit) 
+                                    | (gthree.loc$z_dup>up_limit & gthree.loc$z_del>up_limit) ]),
+  u_h_ud = unique(gthree.loc$GENEID[(gthree.loc$z_dup<low_limit & gthree.loc$z_height>up_limit) 
+                                    | (gthree.loc$z_dup>up_limit & gthree.loc$z_height<low_limit) ]),
+  u_h_uu = unique(gthree.loc$GENEID[(gthree.loc$z_dup<low_limit & gthree.loc$z_height<low_limit) 
+                                    | (gthree.loc$z_dup>up_limit & gthree.loc$z_height>up_limit) ])
+)
+
+
+res <- compareCluster(l, fun="enrichPathway")
+plot(res)
 
 
 
