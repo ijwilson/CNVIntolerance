@@ -2,13 +2,18 @@
 ## Light on my extra code
 
 source("helper_functions.R")
+source("R/prepare.R")
 
 ## read SCZ cnv results
-scz.del.gene <- read.table("C:\\Users\\nijw\\Dropbox/CNVIntolerance/pgc_cnv/PGC_41K_QC_del_minimum8cnv.gene.results", header=TRUE)
+#scz.del.gene <- read.table("C:\\Users\\nijw\\Dropbox/CNVIntolerance/pgc_cnv/PGC_41K_QC_del_minimum8cnv.gene.results", header=TRUE)
 scz.del.gene <- read.table(dropbox("pgc_cnv/PGC_41K_QC_del_minimum8cnv.gene.results"), header=TRUE)
+
+scz.gene <- read.table(dropbox("pgc_cnv/PGC_41K_QC_all_minimum12cnv.gene.results"), header=TRUE)
+
 
 head(scz.del.gene)
 colnames(scz.del.gene)[1] <- "gene_symbol"  ## changing the column name to match exac.scores
+colnames(scz.gene)[1] <- "gene_symbol"  ## changing the column name to match exac.scores
 
 
 ## Read the non-gene centric results.
@@ -26,18 +31,50 @@ head(exac.scores)
 ## We can now merge the two data.tables
 
 merged.table <- merge(scz.del.gene, exac.scores, by="gene_symbol")
+merged.gene <- merge(scz.gene, exac.scores, by="gene_symbol")
+
 head(merged.table)
 
-nrow(scz.del)
+nrow(scz.del.gene)
+nrow(scz.dup.gene)
+
 nrow(exac.scores)
 nrow(merged.table)
 
 plot(-log10(merged.table$dev_pval), merged.table$del.score)
 ## Does not seem to be much of a relationship.
 
-sig <- merged.table$dev_pval<0.05
-mean(merged.table$del.score[sig==TRUE])
+sig <- merged.table$dev_pval<0.001
+table(sig==TRUE)
+
+tapply(merged.table$del.score, sig, mean)
+tapply(merged.table$del.sing.score, sig, mean)
+tapply(merged.table$dup.score, sig, mean)
+anova(lm(merged.table$dup.score~sig))
+
+tapply(merged.table$dup.sing.score, sig, mean)
+anova(lm(merged.table$dup.sing.score~sig))
+
+=0.0008mean(merged.table$del.score[sig==TRUE])
+
 mean(merged.table$del.score[sig==FALSE])
+
+mean(merged.table$del.sing.score[sig==TRUE])
+mean(merged.table$del.sing.score[sig==FALSE])
+
+
+
+sig.gene <- merged.gene$dev_pval < 0.001
+table(sig.gene)
+
+tapply(merged.gene$del.score, sig.gene, mean)
+
+
+
+
+
+
+
 mean(merged.table$dup.score[sig==TRUE])
 mean(merged.table$dup.score[sig==FALSE])## No sign of any difference.  What happens if we just look at highly significant genes
 sig <- merged.table$dev_pval<1E-5
@@ -124,3 +161,44 @@ merged.height <- merge(d, exac.scores, by="gene_symbol")
 install.load("ggplot2")
 
 ggplot(merged.height, aes(x=n, y=gene_length)) + geom_point() + scale_x_log10() + scale_y_log10()
+
+
+
+
+
+
+
+
+
+
+height <- read.csv("data/height_cnv_by_gene_hg19.csv")
+colnames(height)[1] <- "gene_symbol"
+merged_height <- merge(height, exac.scores, by="gene_symbol")
+sig <- exp(merged_height$mean_sig_height_log10) < 0.05
+sig2 <- merged_height$proportion_sig_height>0.2
+table(sig , sig2)
+sig <- sig
+
+table(sig)
+
+tapply(merged_height$del.score, sig, mean)
+anova(lm(merged_height$del.score~sig))
+
+tapply(merged_height$del.sing.score, sig, mean)
+anova(lm(merged_height$del.sing.score~sig))
+
+
+tapply(merged_height$dup.score, sig, mean)
+anova(lm(merged_height$dup.score~sig))
+
+tapply(merged_height$dup.sing.score, sig, mean)
+anova(lm(merged_height$dup.sing.score~factor(sig)))
+
+=0.0008mean(merged.table$del.score[sig==TRUE])
+
+mean(merged.table$del.score[sig==FALSE])
+
+mean(merged.table$del.sing.score[sig==TRUE])
+mean(merged.table$del.sing.score[sig==FALSE])
+
+

@@ -1,7 +1,7 @@
 ---
 title: "Copy Number Variation and Muation Intolerance in Height, BMI and Schizophrenia"
 author: "Ian Wilson"
-date: "6 March 2018"
+date: "15 March 2018"
 output:
   beamer_presentation:
     fig_width: 7
@@ -10,7 +10,7 @@ output:
 classoption: "aspectratio=169"
 ---
 
-```{r setup, include=FALSE, echo=FALSE, results='hide'}
+```{r setup, include=FALSE, echo=FALSE, results='hide', warning=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 library(here)
 source(here("R","prepare.R"))
@@ -20,24 +20,37 @@ install.load("data.table", "pander")
 
 
 
+Copy Number Variants GWAS 
+===========================
+
+### Recent CNV Associations
+
+**Height, BMI, Weight, Waist Hip Ratio** [*CNV-association meta-analysis in 191,161 European adults reveals new loci associated with anthropometric traits*](https://www.nature.com/articles/s41467-017-00556-x)
+
+191,161 adult samples from 26 cohorts.
+
+Summary data available from supplementary information or:  <https://cnvcatalogue.bbmri.nl>
+
+
+**Schizophrenia.** [Contribution of copy number variants to schizophrenia
+from a genome-wide study of 41,321 subjects](https://www.nature.com/articles/ng.3725.pdf)
+
+21,094 cases and 20,227 controls
+
+Summary data available from the Psychiatric Genomics Consortium
 
 
 Genome Wide Height and BMI
 ========================================================
 
-
-```{r prepare, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
-library(here)
-source(here("R","prepare.R"))
-```
-
 ![Manhattan Plot of CNV Assocations with Height and BMI](height_bmi_cnv_manhattan.png)
-
 
 
 Genome Wide Schizophrenia CNV Associations from PGC  
 ========================================================
 ![SCZ](SCZ_cnv_manhattan.png)
+
+
 
 
 Height SNP GWAS
@@ -51,15 +64,6 @@ SCZ SNP GWAS
 
 ![Bmi](scz_GWAS_manhattan.png)
 
-GWAS Associations
-===================
-![assoc](GWAS_latest.png)
-
-
-
-CNV Datasets
-============
-
 
 
 
@@ -70,11 +74,12 @@ Population Genetics
 The patterns and level of genetic variation in a population are 
 due to the interaction between 
 
-* mutation
-* drift
-* and selection
+* *mutation*
+* *drift*
+* and *selection* 
 
-With some population subdivision and assortative mating to add extra layers of associaton at a site,
+With *population subdivision* and *assortative mating* adding extra layers of associaton at a site.
+
 
 and recombination so that positions close on the genome tend to be alike.
 
@@ -103,9 +108,10 @@ with every Mb of total deletion burden.
 Questions
 =========
 
-* Are the variants in CNVs and SNPs in the same genes?
-* What are the limits to CNV variation?
+* Is there any relationship between the variants in CNVs and SNPs?
 * Is there a systematic difference between CNVs associated with Height and schizophrenia?
+* What are the limits to CNV variation?
+* Can these data tell us anything about the balance between mutation and seletion for deletions and duplications?
 
 
 Helpful Data
@@ -146,8 +152,8 @@ Epidemiological studies suggest that height and schizophrenia risk are inversely
 
 Keywords:  \textcolor{red}{Suggestive Signals}, \textcolor{red}{Shrinkage}
 
-Repeat Overlap with two Different Studies
-=================
+Repeat Overlap with two Different (larger) GWAS for height and SCZ 
+=========================================
 
 ```{r, echo=FALSE, cache=TRUE}
 load( here("output", "both_with_GENEID.rda"))
@@ -167,8 +173,29 @@ pander(m)
 
 There is a strong association between positive signals.
 
-Using Shrunk Z-Scores
-==============
+
+Aside:  Shrinking Z-Scores
+==================
+
+The smallest github code I have seen (comments are mine). 
+
+```{r FIQT, echo=TRUE}
+FIQT <- function(z=z, min.p=10^-300){
+    pvals<-2*pnorm(abs(z),low=F)            ## get p-values from z-scores
+    pvals[pvals<min.p]<- min.p              ## Truncate small p values
+    adj.pvals<-p.adjust(pvals,method="fdr") ## Adjust p-values for FDR
+    mu.z<-sign(z)*qnorm(adj.pvals/2,low=F)  ## transform back to z-scores
+    mu.z[abs(z)>qnorm(min.p/2,low=F)]<-z[abs(z)>qnorm(min.p/2,low=F)]  ## give extreme scores a truncated value
+    mu.z
+}
+```
+This code is the basis of a *bioinformatics* paper.
+
+A simple yet accurate correction for winner's curse can predict signals discovered in much larger genome scans.  Begdeli *et al.*. Bioinformatics. 2016.
+
+
+Using Shrunken Z-Scores
+=======================
 
 
 ```{r}
@@ -247,10 +274,32 @@ Height and SCZ Effect Sizes
 
 
 
-Presentation
-========================================================
+ExAc Scores (Jordan White)
+==========================
 
-For more details on authoring R presentations please visit <https://support.rstudio.com/hc/en-us/articles/200486468>.
+Positive scores indicate genes that are more intolerant to mutations.
+ 
+ stat |SCZ deletion Genes | non SCZ Genes |  
+---|----------|---------------|--
+n  | 72 | 276
+deletion scores | -2.12 | -1.92| p=0.11
+single gene deletion | 0.12 | -0.85 | p=2e-6
+duplication scores | -1.66 | -1.16 | p=0.001
+single gene duplication | 0.23 | -0.37 | p=0.0008
+
+
+ stat |Height deletion Genes | non Height Genes |  
+---|----------|---------------|--
+n  | 26 | 1926
+deletion scores | -1.73 | -0.30| p=1e-9
+single gene deletion | 0.0 | -0.16 | p=0.52
+duplication scores | -1.54 | -0.57 | p=1.6e-5
+single gene duplication |  0.2 | -0.2 | p=0.12
 
 
 
+
+Conclusion
+===========
+
+More work needed

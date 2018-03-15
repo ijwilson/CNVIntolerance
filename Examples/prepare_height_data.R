@@ -65,3 +65,6 @@ plot(res$mean_fdel, res$mean_fdup)
 height_cnv_by_gene_hg19 <- res
 
 write.csv(height_cnv_by_gene_hg19, file = "height_cnv_by_gene_hg19.csv", quote=FALSE)
+
+
+
