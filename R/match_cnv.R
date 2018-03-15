@@ -40,9 +40,40 @@ three <- cbind(data.frame(gall.scz19[nearest.h.scz]), data.frame(gheight_cnv19) 
 
 three <- three[abs((three[,2] - three[,15]))<=10,]
 
-                      p=scz.del19$z_pval, f=scz.del19$NCNV/41321, 
-                      fcontrol =scz.del19$UNAFF/20227 , n=scz.del19$NCNV, fcase = scz.del19$AFF/21094)
-nearest.scz.height <- nearest(gheight_cnv19, all.scz)    ## find the nearest duplication
-height_scz.dup <- cbind(data.frame(gheight_cnv19), data.frame(gscz.dup[nearest.scz.dup]) )
+## Should I add annotation to this?
+hub <- AnnotationHub()
+
+
+txdb_hg19 <- TxDb.Hsapiens.UCSC.hg19.knownGene
+install.load.bioc("VariantAnnotation", "AnnotationHub", "TxDb.Hsapiens.UCSC.hg19.knownGene" ,"clusterProfiler")
+
+FIQT <- function(z=z, min.p=10^-300){
+  pvals<-2*pnorm(abs(z), low=F)
+  pvals[pvals<min.p]<- min.p
+  adj.pvals<-p.adjust(pvals,method="fdr")
+  mu.z<-sign(z)*qnorm(adj.pvals/2,low=F)
+  mu.z[abs(z)>qnorm(min.p/2,low=F)]<-z[abs(z)>qnorm(min.p/2,low=F)]
+  mu.z
+}
+
+three$z_del2 <- FIQT(three$z_del, min.p = 1E-12)
+three$z_dup2 <- FIQT(three$z_dup, min.p = 1E-12)
+three$z_height <-   sign(three$beta_height)*qnorm(three$p_height/2,low=F)
+three$z_height2 <- FIQT(three$z_height, min.p=1E-12)
+three$z_BMI <-   sign(three$beta_bmi)*qnorm(three$p_bmi/2,low=F)
+three$z_BMI2 <- FIQT(three$z_BMI, min.p=1E-12)
+
+gthree <-  GRanges(Rle(paste0("chr", three$seqnames)), IRanges(start=three[,2], width=1), 
+                   z_height = three$z_height2,
+                   z_bmi = three$z_BMI2,
+                   z_del = three$z_del2,
+                   z_dup = three$z_dup2)
+                   
+loc.gthree <- locateVariants(gthree, txdb_hg19, AllVariants())
+gthree.loc <- data.table(data.frame(gthree[loc.gthree$QUERYID], GENEID= loc.gthree$GENEID
+                                        , LOCATION=loc.gthree$LOCATION, TXID = loc.gthree$TXID))
+
+save(gthree.loc, file=here("output", "gthree.loc.rda"))
+
 
 
