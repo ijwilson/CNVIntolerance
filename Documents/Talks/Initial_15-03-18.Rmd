@@ -1,5 +1,5 @@
 ---
-title: "Copy Number Variation and Muation Intolerance in Height, BMI and Schizophrenia"
+title: "Copy Number Variation and Mutation Intolerance in Height, BMI and Schizophrenia"
 author: "Ian Wilson"
 date: "15 March 2018"
 output:
@@ -43,12 +43,12 @@ Summary data available from the Psychiatric Genomics Consortium
 Genome Wide Height and BMI
 ========================================================
 
-![Manhattan Plot of CNV Assocations with Height and BMI](height_bmi_cnv_manhattan.png)
+![Manhattan Plot of CNV Assocations with Height and BMI](figs/height_bmi_cnv_manhattan.png)
 
 
 Genome Wide Schizophrenia CNV Associations from PGC  
 ========================================================
-![SCZ](SCZ_cnv_manhattan.png)
+![SCZ](figs/SCZ_cnv_manhattan.png)
 
 
 
@@ -56,13 +56,13 @@ Genome Wide Schizophrenia CNV Associations from PGC
 Height SNP GWAS
 ================
 
-![Bmi](height_GWAS_manhattan.png)
+![Bmi](figs/height_GWAS_manhattan.png)
 
 
 SCZ SNP GWAS
 ============
 
-![Bmi](scz_GWAS_manhattan.png)
+![Bmi](figs/scz_GWAS_manhattan.png)
 
 
 
@@ -165,8 +165,8 @@ allp <- all[LOCATION=="promoter"]
 m <- table(SCZ = all$p.scz<0.0005, Height = all$p.height<0.0005)
 class(m) <- "matrix"
 dm <- data.frame(m)
-colnames(m) <- c("Height Significant", "Height NS")
-rownames(m) <- c("SCZ significant", "SCZ NS")
+colnames(m) <- c("Height not ", "Height Significant")
+rownames(m) <- c("SCZ not significant", "SCZ Significant")
 pander(m)
 ```
 "Suggestive" p-value used is $1 \times 10^{-5}$.
@@ -203,8 +203,8 @@ Using Shrunken Z-Scores
 m <- table( SCZ = ((all$z.scz< -3) | (all$z.scz > 3)), Height = ((all$z.height< -3)|(all$z.height>3)))
 class(m) <- "matrix"
 dm <- data.frame(m)
-colnames(dm) <- c("Height Suggestive (|z| > 3)", "Height NS")
-rownames(dm) <- c("SCZ Suggestive (|z| > 3)", "SCZ NS")
+colnames(dm) <- c( "Height not Suggestive", "Height Suggestive (|z| > 3)")
+rownames(dm) <- c( "SCZ not Suggestive", "SCZ Suggestive (|z| > 3)")
 pander(dm, "Test for association, p<1e-16")
 
 ```
@@ -259,18 +259,18 @@ Pathways via ReactomePA R Library
 ========
 
 
-![Bmi](SNP_pathways.png)
+![Bmi](figs/SNP_pathways.png)
 
 
 CNV Analyses
 ============
 
-![scz](SCZ_case_control.png)
+![scz](figs/SCZ_case_control.png)
 
 Height and SCZ Effect Sizes
 =============
 
-![scz_height](height_scz_cnv.png)
+![scz_height](figs/height_scz_cnv.png)
 
 
 
