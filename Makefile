@@ -10,7 +10,7 @@
 all: alldata output/scz.all_cnv_hg18.gene.bed
 #docs figs
 alldata:  output/genesGR.rda  output/height_cnv.rda output/scz_cnv.rda output/GWAS_height_summary.rda \
-          output/GWAS_scz_summary.rda output/snp_match.rda 
+          output/GWAS_scz_summary.rda output/snp_match.rda output/gthree.loc.rda
   
 ## liftover will only work on linux machines        
 liftover: output/remapped_cnv2.rda output/hg18ToHg19.over.chain.gz
@@ -44,7 +44,11 @@ output/GWAS_scz_summary.rda: R/GWAS_scz_summary.R
 output/snp_match.rda: R/match_snps.R 
 	R CMD BATCH R/match_snps.R 
 
+output/gthree.loc.rda: R/match_cnv.R output/remapped_cnv2.rda
+	R CMD BATCH R/match_cnv.R 
+	
 
+## Files and stuff for liftover
 output/hg18ToHg19.over.chain.gz:
 	wget http://hgdownload.soe.ucsc.edu/goldenPath/hg18/liftOver/hg18ToHg19.over.chain.gz
 	mv -f hg18ToHg19.over.chain.gz output
@@ -68,9 +72,6 @@ output/exacbed.rda:  R/exacbed.R output/genesGR.rda
 
 output/ignore.regions.rda: R/excludeRegions.R
 	R CMD BATCH R/excludeRegions.R
-
-output/individuals.rda:	R/alternative_individuals.R
-	R CMD BATCH 	R/alternative_individuals.R
 
 output/rare.rda:	R/rare.R output/dbCNV.rda output/filteredqs.rda
 	R CMD BATCH R/rare.R

@@ -5,7 +5,7 @@ source(here("R","prepare.R"))
 
 install.load("data.table")
 install.load.bioc("GenomicRanges")
-install.load.bioc("VariantAnnotation", "AnnotationHub", "TxDb.Hsapiens.UCSC.hg19.knownGene" ,"clusterProfiler", "")
+install.load.bioc("VariantAnnotation", "AnnotationHub", "TxDb.Hsapiens.UCSC.hg19.knownGene" ,"clusterProfiler")
 install.load.bioc("ReactomePA")
 load(here("output","remapped_cnv2.rda"))
 
