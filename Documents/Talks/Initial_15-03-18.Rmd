@@ -48,7 +48,7 @@ Genome Wide Height and BMI
 
 Genome Wide Schizophrenia CNV Associations from PGC  
 ========================================================
-![SCZ](figs/SCZ_cnv_manhattan.png)
+![SCZ](figs/scz_cnv_manhattan.png)
 
 
 
