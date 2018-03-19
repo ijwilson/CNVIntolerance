@@ -1,70 +1,24 @@
 
 library(here)
 source(here("R","prepare.R"))
-install.load.bioc("VariantAnnotation", "AnnotationHub", "TxDb.Hsapiens.UCSC.hg19.knownGene" ,"clusterProfiler")
+install.load.bioc("clusterProfiler")
+install.load("data.table", "pander")
 
-load(here("output", "snp_match.rda"))
-install.load("data.table")
-
-FIQT <- function(z=z, min.p=10^-300){
-  pvals<-2*pnorm(abs(z), low=F)
-  pvals[pvals<min.p]<- min.p
-  adj.pvals<-p.adjust(pvals,method="fdr")
-  mu.z<-sign(z)*qnorm(adj.pvals/2,low=F)
-  mu.z[abs(z)>qnorm(min.p/2,low=F)]<-z[abs(z)>qnorm(min.p/2,low=F)]
-  mu.z
-}
-## Schould I change the discordance here?
+load(here("output", "both_annotated.rda"))
 
 
 
-snp_both <- snp_both[!is.na(freq)]
-#swap_alleles <- snp_both$freq > 0.5
-#snp_both$originalfreq <- snp_both$freq
-#snp_both$freq[swap_alleles] <- 1.0-snp_both$freq[swap_alleles]
-#snp_both$boriginal <- snp_both$b
-#snp_both$b[swap_alleles] <- -snp_both$b[swap_alleles]
-#snp_both$or[swap_alleles] <- 1/snp_both$or[swap_alleles]
+allg <- both_annotated[LOCATION!="intergenic"]
+allc <- both_annotated[LOCATION=="coding"]
+alli <- both_annotated[LOCATION=="intron"]
+allp <- both_annotated[LOCATION=="promoter"]
+allr <- both_annotated[LOCATION%in% c("fiveUTR", "threeUTR","promoter")]
 
-snp_both$z.scz <- log(snp_both$or)/snp_both$or.se
-snp_both$z.height <- snp_both$b/snp_both$b.se
-snp_both$zb.scz <- FIQT(snp_both$z.scz)
-snp_both$zb.height <- FIQT(snp_both$z.height)
+val <- c(-3, 3)
+by(both_annotated, both_annotated$GENEID, function(x) c(
+  sum(x$z.height< -val &  x$z.scz < -val, x$z.height > val & x$z.scz > val))
 
-
-gboth <- GRanges(seqnames=Rle(snp_both$chrom), IRanges(start=snp_both$pos, width=1, names=snp_both$snpid)
-                   , p.height = snp_both$p.height, b=snp_both$b, f=snp_both$freq
-                   , p.scz = snp_both$p.scz, or=snp_both$or, 
-                 z.scz = snp_both$zb.scz, z.height = snp_both$zb.height )
-
-rm(snp_both)
-#OK then , want to set this up to look for coding variants, promoter variants and intronic variants 
-#and then compre things.  Buit we could start with variants of estimated large effect
-
-# I would probably also like to have a gene score - perhaps by separating out the different types
-# of variation
-
-
-hub <- AnnotationHub()
-
-
-txdb_hg19 <- TxDb.Hsapiens.UCSC.hg19.knownGene
-
-loc_both_hg19 <- locateVariants(gboth, txdb_hg19, AllVariants())
-table(loc_both_hg19$LOCATION)
-
-#loc_both_hg19 <- loc_height_hg19
-all <- data.table(data.frame(gboth[loc_both_hg19$QUERYID], GENEID= loc_both_hg19$GENEID, LOCATION=loc_both_hg19$LOCATION, TXID = loc_both_hg19$TXID, stringsAsFactors = FALSE))
-
-save(all, file=here("output", "both_with_GENEID.rda"))
-
-allg <- all[LOCATION!="intergenic"]
-allc <- all[LOCATION=="coding"]
-alli <- all[LOCATION=="intron"]
-allp <- all[LOCATION=="promoter"]
-allr <- all[LOCATION%in% c("fiveUTR", "threeUTR","promoter")]
-
-
+tapply(both_annotated)
 
 
 

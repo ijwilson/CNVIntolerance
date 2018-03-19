@@ -7,10 +7,10 @@
 %.pdf: %.R
 		R CMD BATCH $<
 
-all: alldata output/scz.all_cnv_hg18.gene.bed
+all: alldata output/scz.all_cnv_hg18.gene.bed concordant_discordant_pathways.html
 #docs figs
 alldata:  output/genesGR.rda  output/height_cnv.rda output/scz_cnv.rda output/GWAS_height_summary.rda \
-          output/GWAS_scz_summary.rda output/snp_match.rda output/gthree.loc.rda
+          output/GWAS_scz_summary.rda output/snp_match.rda output/gthree.loc.rda output/both_annotated.rda
   
 ## liftover will only work on linux machines        
 liftover: output/remapped_cnv2.rda output/hg18ToHg19.over.chain.gz
@@ -27,10 +27,10 @@ figs: Figs/fig1.pdf alldata
 ## intermediate data files
 
 output/genesGR.rda: R/getGenes.R
-	R CMD BATCH R/getGenes.R
+	R CMD BATCH --no-save R/getGenes.R
 
 output/height_cnv.rda: R/height.R
-	R CMD BATCH R/height.R
+	R CMD BATCH --no-save R/height.R
 
 output/scz_cnv.rda: R/cnv_scz.R
 	R CMD BATCH R/cnv_scz.R
@@ -42,7 +42,13 @@ output/GWAS_scz_summary.rda: R/GWAS_scz_summary.R
 	R CMD BATCH R/GWAS_scz_summary.R 
 	
 output/snp_match.rda: R/match_snps.R 
-	R CMD BATCH R/match_snps.R 
+	R CMD BATCH --no-save R/match_snps.R 
+	
+output/both_annotated.rda: R/match_SCZ_height_snps_annotate.R output/snp_match.rda
+	R CMD BATCH R/match_SCZ_height_snps_annotate.R
+
+concordant_discordant_pathways.html: R/concordant_discordant_pathways.R
+	Rscript -e 'library(rmarkdown); library(here); render(here("R","concordant_discordant_pathways.R"), output_format="html_document")'
 
 output/gthree.loc.rda: R/match_cnv.R output/remapped_cnv2.rda
 	R CMD BATCH R/match_cnv.R 
