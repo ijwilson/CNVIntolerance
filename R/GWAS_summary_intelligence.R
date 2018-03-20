@@ -20,5 +20,6 @@ manhattan(a, bp="position", chr="Chromosome", p="p_value", snp="rsid")
 
 dev.off()
 
+# can i get a merge?
 
 
