@@ -7,20 +7,21 @@
 %.pdf: %.R
 		R CMD BATCH $<
 
-all: alldata output/scz.all_cnv_hg18.gene.bed concordant_discordant_pathways.html
+all: alldata  docs
+
 #docs figs
+
 alldata:  output/genesGR.rda  output/height_cnv.rda output/scz_cnv.rda output/GWAS_height_summary.rda \
-          output/GWAS_scz_summary.rda output/snp_match.rda output/gthree.loc.rda output/both_annotated.rda
+          output/GWAS_scz_summary.rda output/snp_match.rda output/both_annotated.rda
+
   
 ## liftover will only work on linux machines        
-liftover: output/remapped_cnv2.rda output/hg18ToHg19.over.chain.gz
+liftover: output/remapped_cnv2.rda output/hg18ToHg19.over.chain.gz output/scz.all_cnv_hg18.gene.bed 
 
 #output/snpinfo.rda output/exacscores.rda output/dbCNV.rda  \
           output/exacbed.rda output/ignore.regions.rda output/individuals.rda output/rare.rda output/relationships.rda
 
-docs: alldata Reports/associated_cnvs.html Reports/check_individuals.html \
-        Reports/2017_06_22_results_paragraph.html Reports/2017-06-29_Relationships.html \
-        Reports/2017-08-01_results_paragraph2.html 
+docs: alldata  concordant_discordant_pathways.html
         
 figs: Figs/fig1.pdf alldata
 
@@ -33,25 +34,25 @@ output/height_cnv.rda: R/height.R
 	R CMD BATCH --no-save R/height.R
 
 output/scz_cnv.rda: R/cnv_scz.R
-	R CMD BATCH R/cnv_scz.R
+	R CMD BATCH --no-save R/cnv_scz.R
 	
 output/GWAS_height_summary.rda: R/GWAS_height_summary.R
 	R CMD BATCH R/GWAS_height_summary.R
 	
 output/GWAS_scz_summary.rda: R/GWAS_scz_summary.R
-	R CMD BATCH R/GWAS_scz_summary.R 
+	R CMD BATCH --no-save R/GWAS_scz_summary.R 
 	
 output/snp_match.rda: R/match_snps.R 
 	R CMD BATCH --no-save R/match_snps.R 
 	
 output/both_annotated.rda: R/match_SCZ_height_snps_annotate.R output/snp_match.rda
-	R CMD BATCH R/match_SCZ_height_snps_annotate.R
+	R CMD BATCH --no-save R/match_SCZ_height_snps_annotate.R
 
 concordant_discordant_pathways.html: R/concordant_discordant_pathways.R
-	Rscript -e 'library(rmarkdown); library(here); render(here("R","concordant_discordant_pathways.R"), output_format="html_document")'
+	Rscript -e 'library(rmarkdown); library(here); render(here("R","concordant_discordant_pathways.R"), output_format="html_document", output_dir=here("output"))'
 
 output/gthree.loc.rda: R/match_cnv.R output/remapped_cnv2.rda
-	R CMD BATCH R/match_cnv.R 
+	R CMD BATCH --no-save R/match_cnv.R 
 	
 
 ## Files and stuff for liftover
@@ -60,7 +61,7 @@ output/hg18ToHg19.over.chain.gz:
 	mv -f hg18ToHg19.over.chain.gz output
 
 output/scz.all_cnv_hg18.gene.bed: R/prepare_liftover.R
-	R CMD BATCH R/prepare_liftover.R
+	R CMD BATCH --no-save R/prepare_liftover.R
 
 output/scz.all_cnv_hg19.gene.bed: output/scz.all_cnv_hg18.gene.bed R/prepare_liftover.R output/hg18ToHg19.over.chain.gz
 	liftOver output/height_cnv_hg18.bed output/hg18ToHg19.over.chain.gz output/height_cnv_hg19.bed output/unmapped_height
@@ -70,7 +71,7 @@ output/scz.all_cnv_hg19.gene.bed: output/scz.all_cnv_hg18.gene.bed R/prepare_lif
 	liftOver output/scz.del_cnv_hg18.gene.bed output/hg18ToHg19.over.chain.gz output/scz.del_cnv_hg19.gene.bed output/unmapped_scz_del.dup
 
 output/remapped_cnv2.rda: R/liftover.R output/scz.all_cnv_hg19.gene.bed 
-	R CMD BATCH R/liftover.R
+	R CMD BATCH --no-save R/liftover.R
 
 	
 output/exacbed.rda:  R/exacbed.R output/genesGR.rda 
