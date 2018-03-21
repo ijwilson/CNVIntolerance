@@ -7,12 +7,12 @@
 %.pdf: %.R
 		R CMD BATCH $<
 
-all: alldata  docs
+all: alldata  #docs
 
 #docs figs
 
 alldata:  output/genesGR.rda  output/height_cnv.rda output/scz_cnv.rda output/GWAS_height_summary.rda \
-          output/GWAS_scz_summary.rda output/snp_match.rda output/both_annotated.rda
+          output/GWAS_scz_summary.rda output/snp_match.rda output/both_annotated.rda output/snp_NHI.rda
 
   
 ## liftover will only work on linux machines        
@@ -35,6 +35,9 @@ output/height_cnv.rda: R/height.R
 
 output/scz_cnv.rda: R/cnv_scz.R
 	R CMD BATCH --no-save R/cnv_scz.R
+	
+output/snp_NHI.rda: R/match_NHI.R
+	R CMD BATCH --no-save R/match_NHI.R
 	
 output/GWAS_height_summary.rda: R/GWAS_height_summary.R
 	R CMD BATCH R/GWAS_height_summary.R
