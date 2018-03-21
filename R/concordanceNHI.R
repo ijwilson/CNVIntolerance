@@ -105,4 +105,22 @@ gene_t <- t(
 #' Look for the contribution of the different ways that a set of three can be related.
 #' or look at the simple 2 way statistics
 
+gene_test <- gene_z[gene_n>=10]
+classifydf <- function(zz) {
+  zc <- sapply(zz,  cut, c(-Inf, -2, 2, Inf), labels=FALSE)
+  res <- 1+zc[,1]-1 + 3*(zc[,2]-1) + 9*(zc[,3]-1)
+  res[res>14] <- 28-res[res>14]
+  tabulate(res, nbin=14)
+}
+
+class_NHI <- t(sapply(gene_test, classifydf))
+IHN2 <- rownames(class_NHI)[class_NHI[,1]>=2]
+IhN2 <- rownames(class_NHI)[class_NHI[,7]>=2]
+
+install.load.bioc("ReactomePA","clusterProfiler")
+
+res2 <- compareCluster(c(IHN=IHN2, IhN=IhN2), fun="enrichPathway")
+
+colnames(class_NHI) <- tb4$changes
+sapply(gene_z[[2]],  cut, c(-Inf, -2, 2, Inf), labels=FALSE)
 

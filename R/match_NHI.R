@@ -7,10 +7,21 @@ install.load("data.table")
 ## neuroticism summary results from my own computer
 ## Neuroticism paper is
 ## Association analysis in over 329,000 individuals identifies 116 independent variants influencing neuroticism
-## Luciano et al. 2018.  Nature Geneticsvolume 50, pages6–11 (2018) doi:10.1038/s41588-017-0013-8
+## Luciano et al. 2018.  Nature Genetics volume 50, pages 6–11 (2018) doi:10.1038/s41588-017-0013-8
 ## UK biobank data
 
-neuroticism <- fread("file:///D:/data/GWAS_Summary/Luciano_2017/SummaryStats.txt")
+if (!file.exists(here("data","Luciano_2017","SummaryStats.txt"))) {
+  if (!dir.exists(here("data")))
+    dir.create(here("data"))
+  download.file("http://www.psy.ed.ac.uk/ccace/downloads/Luciano_2017.zip", here("data", "luciano_2017.zip"))
+  unzip(here("data", "luciano_2017.zip"), exdir=here("data"))
+  file.remove(here("data", "luciano_2017.zip"))
+  download.file("http://www.psy.ed.ac.uk/ccace/downloads/Hagenaars2017_UKB_MPB_summary_results.zip", here("data", "baldness.zip"))
+  unzip(here("data", "baldness.zip"), exdir=here("data"))
+  file.remove(here("data", "baldness.zip"))
+}
+
+neuroticism <- fread(here("data","Luciano_2017","SummaryStats.txt"))
 head(neuroticism)
 colnames(neuroticism)[2] <- "snpid"
 setkey(neuroticism, "snpid")
@@ -51,8 +62,17 @@ gc()
 #' Sniekers et al Nature Genetics volume 49, pages 1107–1112 (2017) doi:10.1038/ng.3869
 #' https://www.nature.com/articles/ng.3869
 #' 
+#' 
+ if (!file.exists(here("data", "sniekers_2017.txt.gz"))) {
+   if (!dir.exists(here("data"))) dir.create(here("data"))
+   download.file("http://ctg.cncr.nl/documents/p1651/sumstats.txt.gz", here("data", "sniekers_2017.txt.gz"))
+ }
+   
+   
+GWAS_intelligence_summary <- data.table(
+  read.table(here("data", "sniekers_2017.txt.gz"), header=TRUE,  stringsAsFactors = FALSE))
 
-GWAS_intelligence_summary <- fread("D:/data/GWAS_Summary/Intelligence/Sniekers.txt", stringsAsFactors = FALSE) 
+#GWAS_intelligence_summary <- fread("D:/data/GWAS_Summary/Intelligence/Sniekers.txt", stringsAsFactors = FALSE) 
 head(GWAS_intelligence_summary)
 colnames(GWAS_intelligence_summary)[3] <- "snpid"
 
