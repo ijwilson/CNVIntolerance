@@ -37,6 +37,7 @@ gene_m <- matrix(unlist(gene_mad), ncol=3, byrow=TRUE)
 rownames(gene_m) <- names(gene_mad)
 colnames(gene_m) <- c("intelligence", "height", "neuroticism")
 gene_n <- tapply(snp_NHI$GENEID, snp_NHI$GENEID, length)
+
 gene_cor <- lapply(gene_z, cor)
 
 n_agree <- t(sapply(gene_z, function(x) apply(x, 2, function(z) sum(abs(z)>2))))
@@ -54,6 +55,7 @@ z_cut <- classify(z)
 z_cut <- factor(z_cut, labels=levels)
 table( intelligence=cut(z$intelligence, c(-Inf, -2, 2, Inf)),height= cut(z$height, c(-Inf,-2,2,Inf)))
 table( intelligence=cut(z$intelligence, c(-Inf, -2, 2, Inf)), neuroticism=cut(z$neur, c(-Inf,-2,2,Inf)))
+
 table( height=cut(z$height, c(-Inf, -2, 2, Inf)), neuroticism=cut(z$neur, c(-Inf,-2,2,Inf)))
 
 ## This needs to be done by gene or there is little point.
@@ -63,6 +65,7 @@ tb <- table(z_cut)
 tb2 <- data.frame(tb[1:13],rev(tb[15:27]))
  tb4 <- data.frame( changes = c(paste(tb2[,3],paste(tb2[,1]),sep="/"), "none"), count= c(rowSums(tb2[,c(2,4)]), tb[14]))
 
+<<<<<<< HEAD
 install.load("pander")
 pander(tb4)
 
@@ -102,8 +105,5 @@ gene_t <- t(
 #' ## four sets
 #' Look for the contribution of the different ways that a set of three can be related.
 #' or look at the simple 2 way statistics
-
-
-
 
 
