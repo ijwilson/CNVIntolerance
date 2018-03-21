@@ -65,7 +65,6 @@ tb <- table(z_cut)
 tb2 <- data.frame(tb[1:13],rev(tb[15:27]))
  tb4 <- data.frame( changes = c(paste(tb2[,3],paste(tb2[,1]),sep="/"), "none"), count= c(rowSums(tb2[,c(2,4)]), tb[14]))
 
-<<<<<<< HEAD
 install.load("pander")
 pander(tb4)
 
