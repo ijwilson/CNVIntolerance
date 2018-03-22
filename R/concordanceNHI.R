@@ -3,6 +3,7 @@
 library(here)
 source(here("R","prepare.R"))
 install.load("data.table")
+install.load.bioc("ReactomePA","clusterProfiler")
 load(here("output", "snp_NHI.rda"))
 
 #' ## Simplfy things to get some simple statistics and plots
@@ -105,22 +106,72 @@ gene_t <- t(
 #' Look for the contribution of the different ways that a set of three can be related.
 #' or look at the simple 2 way statistics
 
+
+make_labels <- function(names=c("iI", "hH", "nN")) {
+  as.vector(t(outer(as.vector(t(o)), c(substr(names[3],1,1),"-",substr(names[3],2,2)), paste0)))
+
+}
+
+make_folded_labels <- function(names=c("iI", "hH", "nN")) {
+  levels <- make_labels(names)
+  c(paste(levels[1:13],rev(levels[15:27]),sep="/"), "---")
+}
+
+make_labels()
+make_folded_labels()
+
 gene_test <- gene_z[gene_n>=10]
-classifydf <- function(zz) {
-  zc <- sapply(zz,  cut, c(-Inf, -2, 2, Inf), labels=FALSE)
+classifydf <- function(zz, cutval=2 ) {
+  zc <- sapply(zz,  cut, c(-Inf, -cutval, cutval, Inf), labels=FALSE)
   res <- 1+zc[,1]-1 + 3*(zc[,2]-1) + 9*(zc[,3]-1)
   res[res>14] <- 28-res[res>14]
   tabulate(res, nbin=14)
 }
 
-class_NHI <- t(sapply(gene_test, classifydf))
+class_NHI <- t(sapply(gene_test, classifydf, cutval=5))
+colnames(class_NHI) <- make_folded_labels()
 IHN2 <- rownames(class_NHI)[class_NHI[,1]>=2]
 IhN2 <- rownames(class_NHI)[class_NHI[,7]>=2]
 
-install.load.bioc("ReactomePA","clusterProfiler")
 
-res2 <- compareCluster(c(IHN=IHN2, IhN=IhN2), fun="enrichPathway")
+res2.2 <- compareCluster(list(IHN=IHN2, IhN=IhN2), fun="enrichPathway")
+plot(res2.2)
+res2.1 <- compareCluster(list(IHN=rownames(class_NHI)[class_NHI[,1]>=1], IhN=rownames(class_NHI)[class_NHI[,7]>=1]), fun="enrichPathway")
+plot(res2.1)
 
-colnames(class_NHI) <- tb4$changes
-sapply(gene_z[[2]],  cut, c(-Inf, -2, 2, Inf), labels=FALSE)
 
+IHN2 <- rownames(class_NHI)[class_NHI[,1]>=2]
+IhN2 <- rownames(class_NHI)[class_NHI[,7]>=2]
+
+
+res2.2 <- compareCluster(list(IHN=IHN2, iHN=IhN2), fun="enrichPathway")
+plot(res2.2)
+res2.1 <- compareCluster(list(IHN=rownames(class_NHI)[class_NHI[,1]>=2], iHN=rownames(class_NHI)[class_NHI[,9]>=2]), fun="enrichPathway")
+plot(res2.1)
+
+res2.1 <- compareCluster(list(IHN=rownames(class_NHI)[class_NHI[,1]>=2], 
+                              iHN=rownames(class_NHI)[class_NHI[,9]>=2],
+                              IhN = rownames(class_NHI)[class_NHI[,7]>=2],
+                              IHn = rownames(class_NHI)[class_NHI[,3]>=2]), fun="enrichPathway")
+plot(res2.1)
+
+try_pathway <- function(counts=class_NHI, comparisons = c("ihn", "iHn", "ihN", "Ihn"), nmin=2) {
+  cols <- lapply(comparisons, grep, colnames(counts))
+  print(cols)
+  l <- lapply(cols, function(x) rownames(counts)[rowSums(counts[,x, drop=FALSE]) >= nmin])
+  print(sapply(l, length))
+  names(l) <- comparisons
+  res <- compareCluster( l, fun="enrichPathway")
+  plot(res)
+}
+  
+try_pathway(comparisons=c("I[Hh]N", "I[Hh]n", "IHn", "IHN", "/IN", "/In"))
+
+try_pathway(comparisons=c("[Ii]HN", "[Ii]hN", "iHN", "IHN", "/IN", "/In"))
+
+try_pathway(comparisons=c("[Ii]HN", "[Ii]hN", "iHN", "IHN", "/IN", "/In"))
+
+class_NHI5 <- t(sapply(gene_test, classifydf, cutval=5))
+colnames(class_NHI5) <- make_folded_labels()
+
+try_pathway(class_NHI5, comparisons=c("I", "H", "N", "IN", "IH","HN" ))
